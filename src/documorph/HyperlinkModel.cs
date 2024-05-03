@@ -1,4 +1,5 @@
 using System.Text;
+using DocumentFormat.OpenXml.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
@@ -13,14 +14,27 @@ public sealed class HyperlinkModel(Hyperlink hyperlink, IEnumerable<HyperlinkRel
             .FirstOrDefault(item => item.Id == hyperlinkId)?.Uri.ToString()
             ?? string.Empty;
 
+        var internalBuiler = new StringBuilder();
+
         foreach (var element in hyperlink.ChildElements)
         {
             switch (element)
             {
                 case Run run:
-                    new RunModel(run, hyperlinkUrl, []).AppendMarkdown(builder);
+                    new RunModel(run, []).AppendMarkdown(internalBuiler);
                     break;
             }
         }
+
+        var markdown = internalBuiler.Replace("[", "\\[")
+            .Replace("]", "\\]")
+            .Replace("(", "\\(")
+            .Replace(")", "\\)")
+            .ToString();
+
+        if (!string.IsNullOrEmpty(hyperlinkUrl))
+            markdown = $"[{markdown}]({hyperlinkUrl})";
+
+        builder.Append(markdown);
     }
 }

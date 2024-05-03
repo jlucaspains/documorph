@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceRoot}/src/documorph.cli/bin/Debug/net8.0/documorph.cli.dll",
-            "args": ["--in", "D:\\documorph\\test\\documorth.tests\\data\\docconverter.docx", "--out", "D:\\documorph\\test\\documorth.tests\\data\\docconverter.md"],
+            "args": ["--in", "D:\\documorph\\test\\documorph.tests\\data\\docconverter.docx", "--out", "D:\\documorph\\test\\documorph.tests\\data\\docconverter.md"],
             "cwd": "${workspaceRoot}",
             "externalConsole": false,
             "stopAtEntry": false,

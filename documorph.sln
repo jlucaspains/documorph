@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "documorph.cli", "src\documo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A529038F-9DD2-480A-90C0-C9724EDF846F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "documorph.tests", "test\documorth.tests\documorph.tests.csproj", "{E90E9CC6-B430-447A-BD4B-B7647509C822}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "documorph.tests", "test\documorph.tests\documorph.tests.csproj", "{E90E9CC6-B430-447A-BD4B-B7647509C822}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

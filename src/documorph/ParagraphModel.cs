@@ -18,33 +18,37 @@ public sealed class ParagraphModel(Paragraph paragraph, NumberingDefinitionsPart
         var paragraphStyle = _paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value;
         var initialBuilderLength = builder.Length;
 
+        var isHeading = false;
+        var isList = false;
+        var isQuote = false;
+
         if (paragraphStyle != null)
         {
-            var isHeading = paragraphStyle.StartsWith("Heading", StringComparison.OrdinalIgnoreCase);
-            var isList = paragraphStyle.StartsWith("ListParagraph", StringComparison.OrdinalIgnoreCase) && _paragraph.ParagraphProperties != null;
-            var isQuote = paragraphStyle.StartsWith("Quote", StringComparison.OrdinalIgnoreCase) && _paragraph.ParagraphProperties != null;
-
-            if (lastParagraphWasList && !isList)
-                builder.AppendLine();
-
-            if (isHeading)
-                builder.Append($"{GetHeaderMarkdownPrefix(paragraphStyle)} ");
-
-            if (isList)
-                builder.Append($"{GetListMarkdownPrefix(_paragraph.ParagraphProperties!, _numberingDefinitionsPart)} ");
-
-            if (isQuote)
-                builder.Append("> ");
-
-            IsList = isList;
+            isHeading = paragraphStyle.StartsWith("Heading", StringComparison.OrdinalIgnoreCase);
+            isList = paragraphStyle.StartsWith("ListParagraph", StringComparison.OrdinalIgnoreCase) && _paragraph.ParagraphProperties != null;
+            isQuote = paragraphStyle.StartsWith("Quote", StringComparison.OrdinalIgnoreCase) && _paragraph.ParagraphProperties != null;
         }
+
+        if (lastParagraphWasList && !isList)
+            builder.AppendLine();
+
+        if (isHeading && paragraphStyle != null)
+            builder.Append($"{GetHeaderMarkdownPrefix(paragraphStyle)} ");
+
+        if (isList)
+            builder.Append($"{GetListMarkdownPrefix(_paragraph.ParagraphProperties!, _numberingDefinitionsPart)} ");
+
+        if (isQuote)
+            builder.Append("> ");
+
+        IsList = isList;
 
         foreach (var element in _paragraph.ChildElements)
         {
             switch (element)
             {
                 case Run run:
-                    new RunModel(run, string.Empty, _parts).AppendMarkdown(builder);
+                    new RunModel(run, _parts).AppendMarkdown(builder);
                     break;
                 case Hyperlink hyperlink:
                     new HyperlinkModel(hyperlink, _hyperlinkRelationships).AppendMarkdown(builder);
