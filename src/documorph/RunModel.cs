@@ -1,10 +1,9 @@
 using System.Text;
-using DocumentFormat.OpenXml.Linq;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace documorph;
 
-public sealed class RunModel(Run run, string hyperlinkUrl, IEnumerable<DocumentFormat.OpenXml.Packaging.IdPartPair> parts)
+public sealed class RunModel(Run run, IEnumerable<DocumentFormat.OpenXml.Packaging.IdPartPair> parts)
 {
     private readonly Run _run = run;
     private readonly IEnumerable<DocumentFormat.OpenXml.Packaging.IdPartPair> _parts = parts;
@@ -28,10 +27,13 @@ public sealed class RunModel(Run run, string hyperlinkUrl, IEnumerable<DocumentF
 
                     break;
                 case Text text:
-                    AppendText(builder, text.Text, bold, italic, strike, underline, hyperlinkUrl);
+                    AppendText(builder, text.Text, bold, italic, strike, underline);
                     break;
                 case Drawing drawing:
                     AppendImage(builder, drawing, _parts);
+                    break;
+                case Break:
+                    builder.AppendLine();
                     break;
             }
         }
@@ -64,7 +66,7 @@ public sealed class RunModel(Run run, string hyperlinkUrl, IEnumerable<DocumentF
         }
     }
 
-    private static void AppendText(StringBuilder builder, string text, bool bold, bool italic, bool strike, bool underscore, string hyperlinkUrl)
+    private static void AppendText(StringBuilder builder, string text, bool bold, bool italic, bool strike, bool underscore)
     {
         var markdown = text;
 
@@ -79,9 +81,6 @@ public sealed class RunModel(Run run, string hyperlinkUrl, IEnumerable<DocumentF
 
         if (underscore)
             markdown = $"__{markdown}__";
-
-        if (!string.IsNullOrEmpty(hyperlinkUrl))
-            markdown = $"[{markdown}]({hyperlinkUrl})";
 
         if (!string.IsNullOrEmpty(markdown))
             builder.Append(markdown);
