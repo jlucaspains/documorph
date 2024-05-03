@@ -1,0 +1,6 @@
+bin
+obj
+diffs
+TestResults
+coverage.json
+lcov.info

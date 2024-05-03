@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>documorph</ToolCommandName>
+    <InternalsVisibleTo>documorph.tests</InternalsVisibleTo>
+    <Version>0.0.1</Version>
+    <PackageId>lpains.documorph.cli</PackageId>
+    <Authors>Lucas Pains</Authors>
+    <PackageProjectUrl>https://github.com/jlucaspains/documorph</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageDescription>DotNet CLI tool for converting documents from one format to another.</PackageDescription>
+    <RepositoryUrl>https://github.com/jlucaspains/documorph</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\documorph\documorph.csproj" />
+  </ItemGroup>
+</Project>
