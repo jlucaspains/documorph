@@ -27,7 +27,7 @@ w14:paraId=""726C5E95"" w14:textId=""7029D8CB"" w:rsidR=""00253B1F"" w:rsidRDefa
         paragraphModel.AppendMarkdown(builder, false);
 
         // Assert
-        Assert.Equal("# Heading 1\r\n", builder.ToString());
+        Assert.Equal($"# Heading 1{Environment.NewLine}", builder.ToString());
     }
 
     [Fact]
@@ -157,7 +157,7 @@ w14:paraId=""10F62EBF"" w14:textId=""1DC29406"" w:rsidR=""00C276F4"" w:rsidRDefa
         paragraphModel.AppendMarkdown(builder, false);
 
         // Assert
-        Assert.Equal("> This is a quote\r\n", builder.ToString());
+        Assert.Equal($"> This is a quote{Environment.NewLine}", builder.ToString());
     }
 
     [Fact]
@@ -192,6 +192,6 @@ w14:paraId=""056E7E2B"" w14:textId=""0A0BA3C9"" w:rsidR=""00FD6CC0"" w:rsidRDefa
 
         // Assert
         var result = builder.ToString();
-        Assert.Equal("[A link](https://example.com/)\r\n", result);
+        Assert.Equal($"[A link](https://example.com/){Environment.NewLine}", result);
     }
 }

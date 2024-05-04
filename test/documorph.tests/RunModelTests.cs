@@ -205,6 +205,6 @@ xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"">
         model.AppendMarkdown(builder);
 
         // Assert
-        Assert.Equal("\r\n", builder.ToString());
+        Assert.Equal(Environment.NewLine, builder.ToString());
     }
 }
