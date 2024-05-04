@@ -1,8 +1,3 @@
-using System.IO.Packaging;
-using System.Text;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
-
 namespace documorph;
 
 /// <summary>

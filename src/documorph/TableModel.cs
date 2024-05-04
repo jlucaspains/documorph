@@ -1,7 +1,3 @@
-using System.Text;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
-
 namespace documorph;
 
 public sealed class TableModel(Table table, IEnumerable<HyperlinkRelationship> hyperlinkRelationships)

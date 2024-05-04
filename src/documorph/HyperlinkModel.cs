@@ -1,8 +1,3 @@
-using System.Text;
-using DocumentFormat.OpenXml.Linq;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
-
 namespace documorph;
 
 public sealed class HyperlinkModel(Hyperlink hyperlink, IEnumerable<HyperlinkRelationship> hyperlinkRelationships)

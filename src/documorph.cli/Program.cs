@@ -1,4 +1,5 @@
 var rootCommand = new RootCommand();
+var markdownCommand = new Command("md", "Converts a .docx file to markdown.");
 
 var sourceFileOption = new Option<FileInfo>(
             name: "--in",
@@ -7,13 +8,15 @@ var sourceFileOption = new Option<FileInfo>(
 
 var targetFileOption = new Option<FileInfo>(
             name: "--out",
-            description: "The output .md file name.")
+            description: "The output file name.")
 { IsRequired = true };
 
-rootCommand.AddOption(sourceFileOption);
-rootCommand.AddOption(targetFileOption);
+rootCommand.AddCommand(markdownCommand);
 
-rootCommand.SetHandler(Convert,
+markdownCommand.AddOption(sourceFileOption);
+markdownCommand.AddOption(targetFileOption);
+
+markdownCommand.SetHandler(Convert,
             sourceFileOption, targetFileOption);
 
 return await rootCommand.InvokeAsync(args);
@@ -28,17 +31,11 @@ static async Task<int> Convert(FileInfo source, FileInfo target)
         return 1;
     }
 
-    var processor = new DocxToMarkdownProcessor(source.FullName);
-    var (markdown, media) = processor.Process();
-
     var outputDirectory = Path.GetDirectoryName(target.FullName)
             ?? "";
 
-    if (string.IsNullOrEmpty(outputDirectory))
-    {
-        Utilities.WriteError("The output directory is invalid.");
-        return 2;
-    }
+    var processor = new DocxToMarkdownProcessor(source.FullName);
+    var (markdown, media) = processor.Process();
 
     if (!Directory.Exists(outputDirectory))
     {
