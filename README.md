@@ -61,10 +61,10 @@ And **bold** or *italic* or __underscore__ or ~~striked~~ text.
 ```
 
 ### Parameters
-##### `--in` (required)
+#### `--in` (required)
 
 The input `.docx` file. It should be a valid Open XML Word document.
 
 #### `--out` (required)
 
-The output file name. It should be a file with `.md` extension.
+The output file name. It should be a file with `.md` extension. The media files will be dropped in the folder where the output file is in.
