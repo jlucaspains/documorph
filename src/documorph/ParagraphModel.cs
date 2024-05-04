@@ -1,7 +1,3 @@
-using System.Text;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
-
 namespace documorph;
 
 public sealed class ParagraphModel(Paragraph paragraph, NumberingDefinitionsPart? numberingDefinitionsPart, IEnumerable<HyperlinkRelationship> hyperlinkRelationships, IEnumerable<IdPartPair> parts)
