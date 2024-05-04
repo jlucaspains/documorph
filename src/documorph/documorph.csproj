@@ -10,14 +10,14 @@
     <Authors>Lucas Pains</Authors>
     <PackageProjectUrl>https://github.com/jlucaspains/documorph</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageDescription>Convert documents from one format to another.</PackageDescription>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/jlucaspains/documorph</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.0.2" />
     <PackageReference Include="DocumentFormat.OpenXml.Linq" Version="3.0.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
 </Project>

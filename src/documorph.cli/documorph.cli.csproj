@@ -13,7 +13,7 @@
     <Authors>Lucas Pains</Authors>
     <PackageProjectUrl>https://github.com/jlucaspains/documorph</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageDescription>DotNet CLI tool for converting documents from one format to another.</PackageDescription>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/jlucaspains/documorph</RepositoryUrl>
   </PropertyGroup>
 
@@ -23,5 +23,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\documorph\documorph.csproj" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 </Project>
