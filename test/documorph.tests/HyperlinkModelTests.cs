@@ -38,7 +38,7 @@ r:id=""rId5"" w:history=""1"">
     </w:r>
 </w:hyperlink>");
 
-        using var wordDoc = WordprocessingDocument.Create("test.docx", WordprocessingDocumentType.Document);
+        using var wordDoc = WordprocessingDocument.Create("AppendMarkdown_WhenHyperlinkIdIsNotNull_ShouldIncludeHyperlinkUrl.docx", WordprocessingDocumentType.Document);
         wordDoc.AddMainDocumentPart();
         var hyperlinkRel = wordDoc.MainDocumentPart!.AddHyperlinkRelationship(new Uri("https://example.com"), true, "rId5");
 
@@ -70,7 +70,7 @@ r:id=""rId5"" w:history=""1"">
     </w:r>
 </w:hyperlink>");
 
-        using var wordDoc = WordprocessingDocument.Create("test.docx", WordprocessingDocumentType.Document);
+        using var wordDoc = WordprocessingDocument.Create("AppendMarkdown_WillEscapeValue_ShouldIncludeHyperlinkUrl.docx", WordprocessingDocumentType.Document);
         wordDoc.AddMainDocumentPart();
         var hyperlinkRel = wordDoc.MainDocumentPart!.AddHyperlinkRelationship(new Uri("https://example.com"), true, "rId5");
 

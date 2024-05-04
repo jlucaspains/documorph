@@ -180,7 +180,7 @@ w14:paraId=""056E7E2B"" w14:textId=""0A0BA3C9"" w:rsidR=""00FD6CC0"" w:rsidRDefa
     </w:hyperlink>
 </w:p>");
 
-        using var wordDoc = WordprocessingDocument.Create("test.docx", WordprocessingDocumentType.Document);
+        using var wordDoc = WordprocessingDocument.Create("AppendMarkdown_Should_Append_HyperlinkMarkdown_When_IsHyperlink.docx", WordprocessingDocumentType.Document);
         wordDoc.AddMainDocumentPart();
         var hyperlinkRel = wordDoc.MainDocumentPart!.AddHyperlinkRelationship(new Uri("https://example.com"), true, "rId5");
 

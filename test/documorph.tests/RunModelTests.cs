@@ -171,7 +171,7 @@ xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"">
         </wp:inline>
     </w:drawing>
 </w:r>");
-        using var wordDoc = WordprocessingDocument.Create("test.docx", WordprocessingDocumentType.Document);
+        using var wordDoc = WordprocessingDocument.Create("AppendMarkdown_Should_AppendImage.docx", WordprocessingDocumentType.Document);
         wordDoc.AddMainDocumentPart();
         ImagePart imagePart = wordDoc.MainDocumentPart!.AddImagePart(ImagePartType.Jpeg);
 

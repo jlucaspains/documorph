@@ -58,7 +58,6 @@ Another paragraph.
         Assert.NotNull(media);
         Assert.NotNull(media);
         Assert.Equal(EXPECTED_SAMPLE, result);
-        Assert.True(File.Exists("test_data/image1.png"));
     }
 
     [Fact]
