@@ -59,7 +59,7 @@ public sealed class RunModel(Run run, IEnumerable<DocumentFormat.OpenXml.Packagi
 
         foreach (var image in images)
         {
-            builder.Append($"![{image.Description.Replace("\n", " ")}]({image.FileName})");
+            builder.Append($"![{image.Description?.Replace("\n", " ") ?? image.FileName}]({image.FileName})");
         }
     }
 
