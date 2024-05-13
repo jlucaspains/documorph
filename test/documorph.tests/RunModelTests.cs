@@ -14,14 +14,20 @@ public class RunModelTests
     <w:t xml:space=""preserve"">A simple text without formatting</w:t>
 </w:r>");
         var parts = new List<IdPartPair>();
-        var model = new RunModel(run, parts);
-        var builder = new StringBuilder();
 
         // Act
-        model.AppendMarkdown(builder);
+        var model = RunModel.FromRun(run, parts);
 
         // Assert
-        Assert.Equal("A simple text without formatting", builder.ToString());
+        Assert.True(model.IsText);
+        Assert.False(model.IsBold);
+        Assert.False(model.IsItalic);
+        Assert.False(model.IsStrike);
+        Assert.False(model.IsUnderline);
+        Assert.False(model.IsImage);
+        Assert.Null(model.Image);
+        Assert.False(model.IsBreak);
+        Assert.Equal("A simple text without formatting", model.Text);
     }
 
     [Fact]
@@ -37,14 +43,20 @@ public class RunModelTests
     <w:t>A bold text</w:t>
 </w:r>");
         var parts = new List<DocumentFormat.OpenXml.Packaging.IdPartPair>();
-        var model = new RunModel(run, parts);
-        var builder = new StringBuilder();
 
         // Act
-        model.AppendMarkdown(builder);
+        var model = RunModel.FromRun(run, parts);
 
         // Assert
-        Assert.Equal("**A bold text**", builder.ToString());
+        Assert.True(model.IsText);
+        Assert.True(model.IsBold);
+        Assert.False(model.IsItalic);
+        Assert.False(model.IsStrike);
+        Assert.False(model.IsUnderline);
+        Assert.False(model.IsImage);
+        Assert.Null(model.Image);
+        Assert.False(model.IsBreak);
+        Assert.Equal("A bold text", model.Text);
     }
 
     [Fact]
@@ -60,14 +72,20 @@ public class RunModelTests
     <w:t>An italic text</w:t>
 </w:r>");
         var parts = new List<IdPartPair>();
-        var model = new RunModel(run, parts);
-        var builder = new StringBuilder();
 
         // Act
-        model.AppendMarkdown(builder);
+        var model = RunModel.FromRun(run, parts);
 
         // Assert
-        Assert.Equal("*An italic text*", builder.ToString());
+        Assert.True(model.IsText);
+        Assert.False(model.IsBold);
+        Assert.True(model.IsItalic);
+        Assert.False(model.IsStrike);
+        Assert.False(model.IsUnderline);
+        Assert.False(model.IsImage);
+        Assert.Null(model.Image);
+        Assert.False(model.IsBreak);
+        Assert.Equal("An italic text", model.Text);
     }
 
     [Fact]
@@ -83,14 +101,20 @@ public class RunModelTests
 </w:r>
 ");
         var parts = new List<IdPartPair>();
-        var model = new RunModel(run, parts);
-        var builder = new StringBuilder();
 
         // Act
-        model.AppendMarkdown(builder);
+        var model = RunModel.FromRun(run, parts);
 
         // Assert
-        Assert.Equal("~~Striked~~", builder.ToString());
+        Assert.True(model.IsText);
+        Assert.False(model.IsBold);
+        Assert.False(model.IsItalic);
+        Assert.True(model.IsStrike);
+        Assert.False(model.IsUnderline);
+        Assert.False(model.IsImage);
+        Assert.Null(model.Image);
+        Assert.False(model.IsBreak);
+        Assert.Equal("Striked", model.Text);
     }
 
     [Fact]
@@ -106,14 +130,20 @@ public class RunModelTests
 </w:r>
 ");
         var parts = new List<IdPartPair>();
-        var model = new RunModel(run, parts);
-        var builder = new StringBuilder();
 
         // Act
-        model.AppendMarkdown(builder);
+        var model = RunModel.FromRun(run, parts);
 
         // Assert
-        Assert.Equal("__Underline__", builder.ToString());
+        Assert.True(model.IsText);
+        Assert.False(model.IsBold);
+        Assert.False(model.IsItalic);
+        Assert.False(model.IsStrike);
+        Assert.True(model.IsUnderline);
+        Assert.False(model.IsImage);
+        Assert.Null(model.Image);
+        Assert.False(model.IsBreak);
+        Assert.Equal("Underline", model.Text);
     }
 
     [Fact]
@@ -178,15 +208,21 @@ xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"">
         var parts = new List<IdPartPair>{
             new("rId6", imagePart)
         };
-        var model = new RunModel(run, parts);
-        var builder = new StringBuilder();
 
         // Act
-        model.AppendMarkdown(builder);
+        var model = RunModel.FromRun(run, parts);
 
         // Assert
-        // Add your assertions here
-        Assert.Equal("![A screenshot of a computer Description automatically generated](image.jpg)", builder.ToString());
+        Assert.False(model.IsText);
+        Assert.False(model.IsBold);
+        Assert.False(model.IsItalic);
+        Assert.False(model.IsStrike);
+        Assert.False(model.IsUnderline);
+        Assert.True(model.IsImage);
+        Assert.Equal(string.Empty, model.Text);
+        Assert.False(model.IsBreak);
+        Assert.Equal("image.jpg", model.Image?.FileName);
+        Assert.Equal("A screenshot of a computer Description automatically generated", model.Image?.Description);
     }
 
     [Fact]
@@ -198,13 +234,18 @@ xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"">
     <w:br w:type=""page""/>
 </w:r>");
         var parts = new List<IdPartPair>();
-        var model = new RunModel(run, parts);
-        var builder = new StringBuilder();
 
         // Act
-        model.AppendMarkdown(builder);
+        var model = RunModel.FromRun(run, parts);
 
         // Assert
-        Assert.Equal(Environment.NewLine, builder.ToString());
+        Assert.False(model.IsText);
+        Assert.False(model.IsBold);
+        Assert.False(model.IsItalic);
+        Assert.False(model.IsStrike);
+        Assert.False(model.IsUnderline);
+        Assert.False(model.IsImage);
+        Assert.Equal(string.Empty, model.Text);
+        Assert.True(model.IsBreak);
     }
 }

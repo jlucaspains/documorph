@@ -1,42 +1,63 @@
+using DocumentFormat.OpenXml.Linq;
+
 namespace documorph;
 
-public sealed class RunModel(Run run, IEnumerable<DocumentFormat.OpenXml.Packaging.IdPartPair> parts)
+public sealed record ImageModel(string FileName, string MimeType, string? Description);
+
+public sealed class RunModel(bool IsBold, bool isItalic, bool isStrike,
+    bool isUnderline, bool isText, string? text, bool isImage,
+    ImageModel? image, bool isBreak) : IParagraphChildModel
 {
-    private readonly Run _run = run;
-    private readonly IEnumerable<DocumentFormat.OpenXml.Packaging.IdPartPair> _parts = parts;
+    public bool IsBold { get; private set; } = IsBold;
+    public bool IsItalic { get; private set; } = isItalic;
+    public bool IsStrike { get; private set; } = isStrike;
+    public bool IsUnderline { get; private set; } = isUnderline;
+    public bool IsText { get; private set; } = isText;
+    public string? Text { get; private set; } = text;
+    public bool IsImage { get; private set; } = isImage;
+    public ImageModel? Image { get; private set; } = image;
+    public bool IsBreak { get; private set; } = isBreak;
 
-    public void AppendMarkdown(StringBuilder builder)
+    public static RunModel FromRun(Run run, IEnumerable<IdPartPair> parts)
     {
-        var bold = false;
-        var italic = false;
-        var strike = false;
-        var underline = false;
-
-        foreach (var element in _run.ChildElements)
+        var isBold = false;
+        var isItalic = false;
+        var isStrike = false;
+        var isUnderline = false;
+        var isText = false;
+        var text = string.Empty;
+        var isImage = false;
+        ImageModel? image = null;
+        var isBreak = false;
+        foreach (var element in run.ChildElements)
         {
             switch (element)
             {
                 case RunProperties runProperties:
-                    bold = runProperties.Bold != null;
-                    strike = runProperties.Strike != null;
-                    italic = runProperties.Italic != null;
-                    underline = runProperties.Underline != null;
+                    isBold = runProperties.Bold != null;
+                    isItalic = runProperties.Italic != null;
+                    isStrike = runProperties.Strike != null;
+                    isUnderline = runProperties.Underline != null;
 
                     break;
-                case Text text:
-                    AppendText(builder, text.Text, bold, italic, strike, underline);
+                case Text textElement:
+                    isText = true;
+                    text = textElement.Text;
                     break;
                 case Drawing drawing:
-                    AppendImage(builder, drawing, _parts);
+                    isImage = true;
+                    image = GetImageModel(drawing, parts);
                     break;
                 case Break:
-                    builder.AppendLine();
+                    isBreak = true;
                     break;
             }
         }
+
+        return new RunModel(isBold, isItalic, isStrike, isUnderline, isText, text, isImage, image, isBreak);
     }
 
-    private static void AppendImage(StringBuilder builder, Drawing drawing, IEnumerable<DocumentFormat.OpenXml.Packaging.IdPartPair> _parts)
+    private static ImageModel GetImageModel(Drawing drawing, IEnumerable<IdPartPair> parts)
     {
         var images = from graphic in drawing
                 .Descendants<DocumentFormat.OpenXml.Drawing.Graphic>()
@@ -44,42 +65,13 @@ public sealed class RunModel(Run run, IEnumerable<DocumentFormat.OpenXml.Packagi
                      let pic = graphicData.ElementAt(0)
                      let nvdp = pic.Descendants<DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties>().FirstOrDefault()
                      let blip = pic.Descendants<DocumentFormat.OpenXml.Drawing.Blip>().FirstOrDefault()
-                     join part in _parts on blip?.Embed?.Value equals part
+                     join part in parts on blip?.Embed?.Value equals part
                          .RelationshipId
-                     let image = part.OpenXmlPart as DocumentFormat.OpenXml.Packaging.ImagePart
+                     let image = part.OpenXmlPart as ImagePart
                      let fileName = image.Uri.ToString()[(image.Uri.ToString().LastIndexOf('/') + 1)..]
-                     select new
-                     {
-                         Id = blip.Embed,
-                         FileName = fileName,
-                         mime = image.ContentType,
-                         Name = nvdp?.Name?.Value,
-                         Description = nvdp?.Description?.Value
-                     };
+                     let description  = (nvdp?.Description?.Value ?? string.Empty).Replace("\n", " ")
+                     select new ImageModel(fileName, image.ContentType, description);
 
-        foreach (var image in images)
-        {
-            builder.Append($"![{image.Description?.Replace("\n", " ") ?? image.FileName}]({image.FileName})");
-        }
-    }
-
-    private static void AppendText(StringBuilder builder, string text, bool bold, bool italic, bool strike, bool underscore)
-    {
-        var markdown = text;
-
-        if (bold)
-            markdown = $"**{markdown}**";
-
-        if (italic)
-            markdown = $"*{markdown}*";
-
-        if (strike)
-            markdown = $"~~{markdown}~~";
-
-        if (underscore)
-            markdown = $"__{markdown}__";
-
-        if (!string.IsNullOrEmpty(markdown))
-            builder.Append(markdown);
+        return images.First();
     }
 }

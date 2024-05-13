@@ -20,14 +20,15 @@ w14:paraId=""726C5E95"" w14:textId=""7029D8CB"" w:rsidR=""00253B1F"" w:rsidRDefa
     </w:r>
 </w:p>");
 
-        var paragraphModel = new ParagraphModel(paragraph, null, [], []);
-        var builder = new StringBuilder();
-
         // Act
-        paragraphModel.AppendMarkdown(builder, false);
+        var paragraphModel = ParagraphModel.FromParagraph(paragraph, null, [], []);
 
         // Assert
-        Assert.Equal($"# Heading 1{Environment.NewLine}", builder.ToString());
+        Assert.True(paragraphModel.IsHeading);
+        Assert.False(paragraphModel.IsList);
+        Assert.False(paragraphModel.IsQuote);
+        Assert.Equal(1, paragraphModel.HeadingLevel);
+        Assert.Equal("Heading 1", paragraphModel.Children.OfType<RunModel>().First().Text);
     }
 
     [Fact]
@@ -53,14 +54,15 @@ w14:paraId=""4263CB73"" w14:textId=""2C2F97A4"" w:rsidR=""00FD6CC0"" w:rsidRDefa
         using var wordPackage = Package.Open("test_data/docconverter.docx", FileMode.Open, FileAccess.Read, FileShare.Read);
         using var wordDocument = WordprocessingDocument.Open(wordPackage);
 
-        var paragraphModel = new ParagraphModel(paragraph, wordDocument.MainDocumentPart!.NumberingDefinitionsPart, [], []);
-        var builder = new StringBuilder();
-
         // Act
-        paragraphModel.AppendMarkdown(builder, false);
+        var paragraphModel = ParagraphModel.FromParagraph(paragraph, wordDocument.MainDocumentPart!.NumberingDefinitionsPart, [], []);
 
         // Assert
-        Assert.Equal("- Bullet 1", builder.ToString());
+        Assert.False(paragraphModel.IsHeading);
+        Assert.True(paragraphModel.IsList);
+        Assert.Equal("bullet", paragraphModel.ListFormat);
+        Assert.Equal(0, paragraphModel.ListItemLevel);
+        Assert.Equal("Bullet 1", paragraphModel.Children.OfType<RunModel>().First().Text);
     }
 
     [Fact]
@@ -86,14 +88,16 @@ w14:paraId=""4263CB73"" w14:textId=""2C2F97A4"" w:rsidR=""00FD6CC0"" w:rsidRDefa
         using var wordPackage = Package.Open("test_data/docconverter.docx", FileMode.Open, FileAccess.Read, FileShare.Read);
         using var wordDocument = WordprocessingDocument.Open(wordPackage);
 
-        var paragraphModel = new ParagraphModel(paragraph, wordDocument.MainDocumentPart!.NumberingDefinitionsPart, [], []);
-        var builder = new StringBuilder();
-
         // Act
-        paragraphModel.AppendMarkdown(builder, false);
+        var paragraphModel = ParagraphModel.FromParagraph(paragraph, wordDocument.MainDocumentPart!.NumberingDefinitionsPart, [], []);
 
         // Assert
-        Assert.Equal("   - Bullet 1", builder.ToString());
+        Assert.False(paragraphModel.IsHeading);
+        Assert.False(paragraphModel.IsQuote);
+        Assert.True(paragraphModel.IsList);
+        Assert.Equal("bullet", paragraphModel.ListFormat);
+        Assert.Equal(1, paragraphModel.ListItemLevel);
+        Assert.Equal("Bullet 1", paragraphModel.Children.OfType<RunModel>().First().Text);
     }
     
     [Fact]
@@ -119,14 +123,16 @@ w14:paraId=""4263CB73"" w14:textId=""2C2F97A4"" w:rsidR=""00FD6CC0"" w:rsidRDefa
         using var wordPackage = Package.Open("test_data/docconverter.docx", FileMode.Open, FileAccess.Read, FileShare.Read);
         using var wordDocument = WordprocessingDocument.Open(wordPackage);
 
-        var paragraphModel = new ParagraphModel(paragraph, wordDocument.MainDocumentPart!.NumberingDefinitionsPart, [], []);
-        var builder = new StringBuilder();
-
         // Act
-        paragraphModel.AppendMarkdown(builder, false);
+        var paragraphModel = ParagraphModel.FromParagraph(paragraph, wordDocument.MainDocumentPart!.NumberingDefinitionsPart, [], []);
 
         // Assert
-        Assert.Equal("1. List 1", builder.ToString());
+        Assert.False(paragraphModel.IsHeading);
+        Assert.False(paragraphModel.IsQuote);
+        Assert.True(paragraphModel.IsList);
+        Assert.Equal("decimal", paragraphModel.ListFormat);
+        Assert.Equal(0, paragraphModel.ListItemLevel);
+        Assert.Equal("List 1", paragraphModel.Children.OfType<RunModel>().First().Text);
     }
     
     [Fact]
@@ -150,14 +156,15 @@ w14:paraId=""10F62EBF"" w14:textId=""1DC29406"" w:rsidR=""00C276F4"" w:rsidRDefa
     <w:proofErr w:type=""gramEnd""/>
 </w:p>");
 
-        var paragraphModel = new ParagraphModel(paragraph, null, [], []);
-        var builder = new StringBuilder();
 
         // Act
-        paragraphModel.AppendMarkdown(builder, false);
+        var paragraphModel = ParagraphModel.FromParagraph(paragraph, null, [], []);
 
         // Assert
-        Assert.Equal($"> This is a quote{Environment.NewLine}", builder.ToString());
+        Assert.False(paragraphModel.IsHeading);
+        Assert.True(paragraphModel.IsQuote);
+        Assert.False(paragraphModel.IsList);
+        Assert.Equal("This is a ", paragraphModel.Children.OfType<RunModel>().First().Text);
     }
 
     [Fact]
@@ -184,14 +191,15 @@ w14:paraId=""056E7E2B"" w14:textId=""0A0BA3C9"" w:rsidR=""00FD6CC0"" w:rsidRDefa
         wordDoc.AddMainDocumentPart();
         var hyperlinkRel = wordDoc.MainDocumentPart!.AddHyperlinkRelationship(new Uri("https://example.com"), true, "rId5");
 
-        var paragraphModel = new ParagraphModel(paragraph, null, [hyperlinkRel], []);
-        var builder = new StringBuilder();
-
         // Act
-        paragraphModel.AppendMarkdown(builder, false);
+        var paragraphModel = ParagraphModel.FromParagraph(paragraph, null, [hyperlinkRel], []);
 
         // Assert
-        var result = builder.ToString();
-        Assert.Equal($"[A link](https://example.com/){Environment.NewLine}", result);
+        var hyperlinkModel = paragraphModel.Children.OfType<HyperlinkModel>().First();
+        Assert.False(paragraphModel.IsHeading);
+        Assert.False(paragraphModel.IsQuote);
+        Assert.False(paragraphModel.IsList);
+        Assert.Equal("https://example.com/", hyperlinkModel.Uri);
+        Assert.Equal("A link", hyperlinkModel.Runs.First().Text);
     }
 }
