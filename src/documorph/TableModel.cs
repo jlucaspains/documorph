@@ -1,45 +1,30 @@
 namespace documorph;
 
-public sealed class TableModel(Table table, IEnumerable<HyperlinkRelationship> hyperlinkRelationships)
+public sealed class TableModel(IEnumerable<IEnumerable<ParagraphModel>> rows): IDocumentChildren
 {
-    private readonly Table _table = table;
-    private readonly IEnumerable<HyperlinkRelationship> _hyperlinkRelationships = hyperlinkRelationships;
+    public IEnumerable<IEnumerable<ParagraphModel>> Rows { get; private set; } = rows;
 
-    public void AppendMarkdown(StringBuilder builder)
+    public static TableModel FromTable(Table table, IEnumerable<HyperlinkRelationship> hyperlinkRelationships)
     {
-        var isFirstRow = true;
-
-        foreach (var row in _table.Elements<TableRow>())
+        var rows = new List<IEnumerable<ParagraphModel>>();
+        foreach (var row in table.Elements<TableRow>())
         {
-            if (!isFirstRow)
-                builder.AppendLine();
-
+            var rowCells = new List<ParagraphModel>();
             foreach (var cell in row.Elements<TableCell>())
             {
-                builder.Append('|');
                 foreach (var element in cell.Elements())
                 {
                     switch (element)
                     {
                         case Paragraph paragraph:
-                            new ParagraphModel(paragraph, null, _hyperlinkRelationships, []).AppendMarkdown(builder, false, true);
+                            rowCells.Add(ParagraphModel.FromParagraph(paragraph, null, hyperlinkRelationships, []));
                             break;
                     }
                 }
             }
-            builder.Append('|');
-
-            if (isFirstRow)
-            {
-                builder.AppendLine();
-                builder.Append('|');
-                foreach (var cell in row.Elements<TableCell>())
-                    builder.Append("---|");
-            }
-
-            isFirstRow = false;
+            rows.Add(rowCells);
         }
-        
-        builder.AppendLine();
+
+        return new TableModel(rows);
     }
 }

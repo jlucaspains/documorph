@@ -1,3 +1,5 @@
+using DocumentFormat.OpenXml.Linq;
+
 namespace documorph;
 
 /// <summary>
@@ -13,62 +15,158 @@ public sealed class DocxToMarkdownProcessor(string inputFile)
         using var wordPackage = Package.Open(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read);
         using var wordDocument = WordprocessingDocument.Open(wordPackage);
 
-        var body = wordDocument?.MainDocumentPart?.Document.Body;
-        var numberingDefinitionsPart = wordDocument?.MainDocumentPart?.NumberingDefinitionsPart;
-        var hyperlinkRelationships = wordDocument?.MainDocumentPart?.HyperlinkRelationships
-            ?? [];
-        var parts = wordDocument?.MainDocumentPart?.Parts
-            ?? [];
+        var model = DocumentModel.FromDocument(wordDocument);
+        var result = new StringBuilder();
 
-        var media = (from graphic in body?
-                .Descendants<DocumentFormat.OpenXml.Drawing.Graphic>()
-                     let graphicData = graphic.Descendants<DocumentFormat.OpenXml.Drawing.GraphicData>().FirstOrDefault()
-                     let pic = graphicData.ElementAt(0)
-                     let blip = pic.Descendants<DocumentFormat.OpenXml.Drawing.Blip>().FirstOrDefault()
-                     join part in parts on blip?.Embed?.Value equals part
-                         .RelationshipId
-                     let image = part.OpenXmlPart as ImagePart
-                     let fileName = image.Uri.ToString()[(image.Uri.ToString().LastIndexOf('/') + 1)..]
-                     select new MediaModel(blip?.Embed?.Value ?? string.Empty, fileName, GetBytesFromStream(image.GetStream()))).ToList();
-
-        var lastParagraphWasList = false;
-        var builder = new StringBuilder();
-
-        foreach (var element in body?.ChildElements ?? new())
+        var children = model.Children.Select((x, i) => (Element: x, Index: i)).ToList();
+        foreach (var (element, index) in children)
         {
-            var skipNewLine = false;
             switch (element)
             {
-                case Paragraph paragraph:
-                    var paragraphModel = new ParagraphModel(paragraph, numberingDefinitionsPart, hyperlinkRelationships, parts);
-                    paragraphModel.AppendMarkdown(builder, lastParagraphWasList);
-
-                    lastParagraphWasList = paragraphModel.IsList;
-                    skipNewLine = paragraphModel.IsEmpty;
+                case ParagraphModel paragraphModel:
+                    var nextParagraphModel = index < children.Count - 1 ? children[index + 1].Element as ParagraphModel : null;
+                    ProcessParagraph(paragraphModel, nextParagraphModel, false, result);
                     break;
-                case Table table:
-                    if (lastParagraphWasList)
-                        builder.AppendLine();
-
-                    new TableModel(table, hyperlinkRelationships).AppendMarkdown(builder);
-                    lastParagraphWasList = false;
-                    break;
-                default:
-                    skipNewLine = true;
+                case TableModel tableModel:
+                    ProcessTable(tableModel, result);
                     break;
             }
-
-            if (!skipNewLine)
-                builder.AppendLine();
         }
 
-        return (builder.ToString(), media);
+        return (result.ToString(), model.Media);
     }
 
-    private static byte[] GetBytesFromStream(Stream stream)
+    private void ProcessParagraph(ParagraphModel paragraphModel, ParagraphModel? nextParagraphModel, bool skipNewLine, StringBuilder builder)
     {
-        using var memoryStream = new MemoryStream();
-        stream.CopyTo(memoryStream);
-        return memoryStream.ToArray();
+        if (paragraphModel.IsHeading)
+        {
+            builder.Append($"{new string('#', paragraphModel.HeadingLevel)} ");
+        }
+
+        if (paragraphModel.IsList)
+        {
+            var listMarker = paragraphModel.ListFormat switch
+            {
+                "decimal" => "1.",
+                "bullet" => "-",
+                _ => ""
+            };
+            builder.Append($"{new string(' ', paragraphModel.ListItemLevel * 3)}{listMarker} ");
+        }
+
+        if (paragraphModel.IsQuote)
+        {
+            builder.Append($"> ");
+        }
+
+        var children = paragraphModel.Children.Select((x, i) => (Element: x, Index: i)).ToList();
+        foreach (var (element, index) in children)
+        {
+            switch (element)
+            {
+                case RunModel run:
+                    var previousRunModel = index > 0 ? children[index - 1].Element as RunModel : null;
+                    var nextRunModel = index < children.Count - 1 ? children[index + 1].Element as RunModel : null;
+                    ProcessRun(run, previousRunModel, nextRunModel, builder);
+                    break;
+                case HyperlinkModel hyperlink:
+                    ProcessHyperlink(hyperlink, builder);
+                    break;
+            }
+        }
+
+        if (!skipNewLine && !paragraphModel.IsEmpty)
+        {
+            builder.AppendLine();
+        }
+        if (!skipNewLine && 
+            (!paragraphModel.IsList || (!nextParagraphModel?.IsList ?? true)) &&
+            !paragraphModel.IsEmpty)
+        {
+            builder.AppendLine();
+        }
+    }
+
+    private void ProcessTable(TableModel tableModel, StringBuilder builder)
+    {
+        var isFirstRow = true;
+
+        foreach (var row in tableModel.Rows)
+        {
+            foreach (var cell in row)
+            {
+                builder.Append('|');
+
+                ProcessParagraph(cell, null, true, builder);
+            }
+
+            builder.AppendLine("|");
+
+            if (isFirstRow)
+            {
+                builder.AppendLine("|" + string.Join("", Enumerable.Repeat("---|", row.Count())));
+                isFirstRow = false;
+            }
+        }
+
+        builder.AppendLine();
+    }
+
+    private void ProcessRun(RunModel runModel, RunModel? previousRunModel, RunModel? nextRunModel, StringBuilder builder)
+    {
+        if (runModel.IsBreak)
+        {
+            builder.AppendLine();
+            return;
+        }
+
+        var markdownSymbols = new Dictionary<Func<RunModel, RunModel?, bool>, string>
+        {
+            { (rm, reference) => rm.IsBold && !(reference?.IsBold ?? false), "**" },
+            { (rm, reference) => rm.IsItalic && !(reference?.IsItalic ?? false), "*" },
+            { (rm, reference) => rm.IsStrike && !(reference?.IsStrike ?? false), "~~" },
+            { (rm, reference) => rm.IsUnderline && !(reference?.IsUnderline ?? false), "__" }
+        };
+
+        if (runModel.IsImage)
+        {
+            builder.Append($"![");
+        }
+
+        var text = runModel.IsText ? runModel.Text : runModel.Image?.Description;
+
+        foreach (var symbol in markdownSymbols)
+        {
+            if (symbol.Key(runModel, previousRunModel))
+                builder.Append(symbol.Value);
+        }
+
+        builder.Append(text);
+
+        foreach (var symbol in markdownSymbols)
+        {
+            if (symbol.Key(runModel, nextRunModel))
+                builder.Append(symbol.Value);
+        }
+
+        if (runModel.IsImage)
+        {
+            builder.Append($"]({runModel.Image?.FileName})");
+        }
+    }
+
+    private void ProcessHyperlink(HyperlinkModel hyperlink, StringBuilder builder)
+    {
+        builder.Append('[');
+
+        var children = hyperlink.Runs.Select((x, i) => (Element: x, Index: i)).ToList();
+        foreach (var (element, index) in children)
+        {
+            var previousRunModel = index > 0 ? children[index - 1].Element : null;
+            var nextRunModel = index < children.Count - 1 ? children[index + 1].Element : null;
+            ProcessRun(element, previousRunModel, nextRunModel, builder);
+        }
+
+        builder.Append($"]({hyperlink.Uri})");
     }
 }

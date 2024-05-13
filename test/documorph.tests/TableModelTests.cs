@@ -164,17 +164,12 @@ xmlns:w14=""http://schemas.microsoft.com/office/word/2010/wordml"">
         var table = new Table(TABLE_XML);
         var hyperlinkRelationships = new List<HyperlinkRelationship>();
         var builder = new StringBuilder();
-        var tableModel = new TableModel(table, hyperlinkRelationships);
 
         // Act
-        tableModel.AppendMarkdown(builder);
+        var tableModel = TableModel.FromTable(table, hyperlinkRelationships);
 
         // Assert
-        var expectedOutput = 
-@"|Column 1|Column 2|Column 3|Column 4|Column 5|
-|---|---|---|---|---|
-|Cell 1 1|Cell 2 1|Cell 3 1|Cell 4 1|Cell 5 1|
-";
-        Assert.Equal(expectedOutput, builder.ToString());
+        Assert.Equal(2, tableModel.Rows.Count());
+        Assert.Equal("Column 1", tableModel.Rows.First().First().Children.OfType<RunModel>().First().Text);
     }
 }
