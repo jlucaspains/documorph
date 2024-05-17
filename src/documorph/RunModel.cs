@@ -45,8 +45,8 @@ public sealed class RunModel(bool IsBold, bool isItalic, bool isStrike,
                     text = textElement.Text;
                     break;
                 case Drawing drawing:
-                    isImage = true;
                     image = GetImageModel(drawing, parts);
+                    isImage = image != null;
                     break;
                 case Break:
                     isBreak = true;
@@ -57,21 +57,21 @@ public sealed class RunModel(bool IsBold, bool isItalic, bool isStrike,
         return new RunModel(isBold, isItalic, isStrike, isUnderline, isText, text, isImage, image, isBreak);
     }
 
-    private static ImageModel GetImageModel(Drawing drawing, IEnumerable<IdPartPair> parts)
+    private static ImageModel? GetImageModel(Drawing drawing, IEnumerable<IdPartPair> parts)
     {
         var images = from graphic in drawing
                 .Descendants<DocumentFormat.OpenXml.Drawing.Graphic>()
                      let graphicData = graphic.Descendants<DocumentFormat.OpenXml.Drawing.GraphicData>().FirstOrDefault()
-                     let pic = graphicData.ElementAt(0)
-                     let nvdp = pic.Descendants<DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties>().FirstOrDefault()
-                     let blip = pic.Descendants<DocumentFormat.OpenXml.Drawing.Blip>().FirstOrDefault()
+                     let pic = graphicData?.Descendants<DocumentFormat.OpenXml.Drawing.Picture>().FirstOrDefault()
+                     let nvdp = pic?.Descendants<DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties>().FirstOrDefault()
+                     let blip = pic?.Descendants<DocumentFormat.OpenXml.Drawing.Blip>().FirstOrDefault()
                      join part in parts on blip?.Embed?.Value equals part
                          .RelationshipId
                      let image = part.OpenXmlPart as ImagePart
-                     let fileName = image.Uri.ToString()[(image.Uri.ToString().LastIndexOf('/') + 1)..]
-                     let description  = (nvdp?.Description?.Value ?? string.Empty).Replace("\n", " ")
+                     let fileName = image?.Uri.ToString()[(image.Uri.ToString().LastIndexOf('/') + 1)..]
+                     let description = (nvdp?.Description?.Value ?? string.Empty).Replace("\n", " ")
                      select new ImageModel(fileName, image.ContentType, description);
 
-        return images.First();
+        return images.FirstOrDefault();
     }
 }
