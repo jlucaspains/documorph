@@ -62,7 +62,7 @@ public sealed class RunModel(bool IsBold, bool isItalic, bool isStrike,
         var images = from graphic in drawing
                 .Descendants<DocumentFormat.OpenXml.Drawing.Graphic>()
                      let graphicData = graphic.Descendants<DocumentFormat.OpenXml.Drawing.GraphicData>().FirstOrDefault()
-                     let pic = graphicData?.Descendants<DocumentFormat.OpenXml.Drawing.Picture>().FirstOrDefault()
+                     let pic = (graphicData?.Any() ?? false) ? graphicData?.ElementAt(0) : null
                      let nvdp = pic?.Descendants<DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties>().FirstOrDefault()
                      let blip = pic?.Descendants<DocumentFormat.OpenXml.Drawing.Blip>().FirstOrDefault()
                      join part in parts on blip?.Embed?.Value equals part
