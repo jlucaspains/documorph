@@ -3,4 +3,5 @@ obj
 diffs
 TestResults
 coverage.json
+coverage.cobertura.xml
 lcov.info
