@@ -48,7 +48,7 @@ static async Task<int> Convert(FileInfo source, FileInfo target)
 
     foreach (var fileToProcess in filesToProcess)
     {
-        var targetFile = outputDirectory != target.FullName
+        var targetFile = outputDirectory == target.FullName || isSourceDirectory
             ? new FileInfo(Path.Combine(outputDirectory, Path.GetFileNameWithoutExtension(fileToProcess.FullName) + ".md"))
             : target;
 
