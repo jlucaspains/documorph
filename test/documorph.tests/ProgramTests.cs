@@ -66,10 +66,6 @@ public class ProgramTests
         var result = entryPoint.Invoke(null, [new string[] { "md", "--in", "./test_data/docconverter.docx", "--out", "./test_data2/Test_ValidParameters.md" }]);
 
         Assert.Equal(0, result);
-
-        var files = Directory.GetFiles("./test_data2/");
-        foreach(var file in files) Console.WriteLine($"Find this: {file}");
-
         Assert.True(File.Exists("./test_data2/Test_ValidParameters.md"));
         Assert.True(File.Exists("./test_data2/image1.png"));
     }
@@ -90,5 +86,28 @@ public class ProgramTests
         var result = entryPoint.Invoke(null, [new string[] { "md", "--in", "test_data/docconverter.docx", "--out", "" }]);
 
         Assert.Equal(1, result);
+    }
+    
+    [Fact]
+    public void WillFailIfInputIsDirectoryAndOutputIsNotDirectory()
+    {
+        var entryPoint = typeof(Program).Assembly.EntryPoint!;
+        var result = entryPoint.Invoke(null, [new string[] { "md", "--in", "test_data/", "--out", "test_data/docconverter.docx" }]);
+
+        Assert.Equal(1, result);
+    }
+
+    [Fact]
+    public void WillConvertAnEntireFolder()
+    {
+        Directory.CreateDirectory("WillConvertAnEntireFolder/");
+        File.Copy("test_data/docconverter.docx", "WillConvertAnEntireFolder/docconverter1.docx", true);
+        File.Copy("test_data/docconverter.docx", "WillConvertAnEntireFolder/docconverter2.docx", true);
+        var entryPoint = typeof(Program).Assembly.EntryPoint!;
+        var result = entryPoint.Invoke(null, [new string[] { "md", "--in", "WillConvertAnEntireFolder/", "--out", "WillConvertAnEntireFolder/" }]);
+
+        Assert.Equal(0, result);
+        Assert.Equal(Directory.GetFiles("WillConvertAnEntireFolder/", "*.docx").Length, 
+            Directory.GetFiles("WillConvertAnEntireFolder/", "*.md").Length);
     }
 }

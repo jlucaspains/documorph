@@ -35,6 +35,12 @@ static async Task<int> Convert(FileInfo source, FileInfo target)
 
     var outputDirectory = Path.GetDirectoryName(target.FullName)
             ?? "";
+    
+    if (isSourceDirectory && outputDirectory != target.FullName.TrimEnd('/').TrimEnd('\\'))
+    {
+        Utilities.WriteError("When source is a directory, target must also be a directory.");
+        return 1;
+    }
 
     var filesToProcess = isSourceDirectory
         ? Directory.GetFiles(source.FullName, "*.docx", SearchOption.TopDirectoryOnly).Select(item => new FileInfo(item))
