@@ -26,7 +26,6 @@ static async Task<int> Convert(FileInfo source, FileInfo target)
     Utilities.WriteInformation("Converting {0} to {1}", source.FullName, target.FullName);
 
     var isSourceDirectory = (source.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
-    var isTargetDirectory = (target.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
 
     if (!source.Exists && !isSourceDirectory)
     {
@@ -49,7 +48,7 @@ static async Task<int> Convert(FileInfo source, FileInfo target)
 
     foreach (var fileToProcess in filesToProcess)
     {
-        var targetFile = isTargetDirectory
+        var targetFile = outputDirectory != target.FullName
             ? new FileInfo(Path.Combine(outputDirectory, Path.GetFileNameWithoutExtension(fileToProcess.FullName) + ".md"))
             : target;
 
