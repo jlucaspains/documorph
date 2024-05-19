@@ -46,6 +46,11 @@ Another paragraph.
 
 ![A screenshot of a computer  Description automatically generated](image1.png)
 
+
+
+
+After a break
+
 ";
 
     [Fact]
@@ -54,10 +59,14 @@ Another paragraph.
         var converter = new DocxToMarkdownProcessor("test_data/docconverter.docx");
         var (result, media) = converter.Process();
 
+        // code files are saved using windows format.
+        // To ensure tests work on both environments, replace \r\n with environment new line 
+        var expected = EXPECTED_SAMPLE.Replace("\r\n", Environment.NewLine);
+
         Assert.NotNull(result);
         Assert.NotNull(media);
         Assert.NotNull(media);
-        Assert.Equal(EXPECTED_SAMPLE, result);
+        Assert.Equal(expected, result);
     }
 
     [Fact]
