@@ -24,7 +24,7 @@ dotnet tool install --global lpains.documorph.cli --prerelease
 Upon installation, access the tool by executing `documorph` in your terminal. For specific command details, refer to the sections below or utilize the CLI help via `documorph -h`.
 
 ```powershell
-documorph md --in <inputFile> --out <outputFile> [-?, -h, --help]
+documorph md --in <input> --out <output> [-?, -h, --help]
 ```
 
 Basic usage example:
@@ -63,8 +63,8 @@ And **bold** or *italic* or __underscore__ or ~~striked~~ text.
 ### Parameters
 #### `--in` (required)
 
-The input `.docx` file. It should be a valid Open XML Word document.
+The input `.docx` file or directory. If a folder is provided, all the `.docx` files will be converted. Any `.docx` file should be a valid Open XML Word document.
 
 #### `--out` (required)
 
-The output file name. The media files will be dropped in the folder where the output file is in.
+The output file or directory full path. The media files will be dropped in the folder where the output files are in.

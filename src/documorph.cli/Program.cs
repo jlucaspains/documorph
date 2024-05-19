@@ -3,12 +3,12 @@ var markdownCommand = new Command("md", "Converts a .docx file to markdown.");
 
 var sourceFileOption = new Option<FileInfo>(
             name: "--in",
-            description: "The .docx file to convert.")
+            description: "The .docx file or directory to convert.")
 { IsRequired = true };
 
 var targetFileOption = new Option<FileInfo>(
             name: "--out",
-            description: "The output file name.")
+            description: "The output file or directory name.")
 { IsRequired = true };
 
 rootCommand.AddCommand(markdownCommand);
