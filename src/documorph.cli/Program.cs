@@ -1,11 +1,13 @@
 var rootCommand = new RootCommand();
 var markdownCommand = new Command("md", "Converts a .docx file to markdown.");
 
+// Add option for source file or directory
 var sourceFileOption = new Option<FileInfo>(
             name: "--in",
             description: "The .docx file or directory to convert.")
 { IsRequired = true };
 
+// Add option for target file or directory
 var targetFileOption = new Option<FileInfo>(
             name: "--out",
             description: "The output file or directory name.")
