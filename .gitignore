@@ -5,3 +5,4 @@ TestResults
 coverage.json
 coverage.cobertura.xml
 lcov.info
+/.vs

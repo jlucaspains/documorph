@@ -1,6 +1,8 @@
 # documorph
 `documorph` is a .NET package and command-line tool for converting between document file formats. The initial implementation supports only `.docx` to `.md` files, but other formats will be considered for the future.
 
+![documorph example](./docs/docx2md.png)
+
 ## Package
 ```powershell
 dotnet package install lpains.documorph --prerelease
