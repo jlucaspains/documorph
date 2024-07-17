@@ -82,4 +82,13 @@ After a break
         var converter = new DocxToMarkdownProcessor("test_data/badfile.docx");
         Assert.Throws<InvalidDataException>(() => converter.Process());
     }
+    
+    [Fact]
+    public void WillMoveSpacesOutOfBold()
+    {
+        var converter = new DocxToMarkdownProcessor("test_data/boldwithextraspace.docx");
+        var expected = $"**This is a bold string.** This is not.{Environment.NewLine}{Environment.NewLine}";
+        var (result, _) = converter.Process();
+        Assert.Equal(expected, result);
+    }
 }
