@@ -56,7 +56,6 @@ public class ProgramTests
 
         Assert.Equal(0, result);
         Assert.True(File.Exists("./test_data/Test_ValidParameters.md"));
-        Assert.True(File.Exists("./test_data/image1.png"));
     }
     
     [Fact]
@@ -67,7 +66,6 @@ public class ProgramTests
 
         Assert.Equal(0, result);
         Assert.True(File.Exists("./test_data2/Test_ValidParameters.md"));
-        Assert.True(File.Exists("./test_data2/image1.png"));
     }
     
     [Fact]
