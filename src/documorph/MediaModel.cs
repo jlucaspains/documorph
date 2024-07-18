@@ -1,3 +1,3 @@
 namespace documorph;
 
-public record MediaModel (string Id, string FileName, byte[] Content);
+public record MediaModel (string Id, string FileName, string MimeType, string UniqueFileName, byte[] Content);
