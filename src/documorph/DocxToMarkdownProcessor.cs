@@ -134,6 +134,7 @@ public sealed class DocxToMarkdownProcessor(string inputFile)
         }
 
         var text = runModel.IsText ? runModel.Text : runModel.Image?.Description;
+        text ??= string.Empty;
 
         foreach (var symbol in markdownSymbols)
         {
@@ -141,13 +142,17 @@ public sealed class DocxToMarkdownProcessor(string inputFile)
                 builder.Append(symbol.Value);
         }
 
-        builder.Append(text);
+        // move spaces at the end of text to a new string
+        var spaces = text.Reverse().TakeWhile(char.IsWhiteSpace).ToList();
+        builder.Append(text.TrimEnd(' '));
 
         foreach (var symbol in markdownSymbols)
         {
             if (symbol.Key(runModel, nextRunModel))
                 builder.Append(symbol.Value);
         }
+
+        builder.Append(string.Join(string.Empty, spaces));
 
         if (runModel.IsImage)
         {

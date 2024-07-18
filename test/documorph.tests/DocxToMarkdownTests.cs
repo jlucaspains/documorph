@@ -1,6 +1,8 @@
+using System.Text.RegularExpressions;
+
 namespace documorph.tests;
 
-public class DocxToMarkdownTests
+public partial class DocxToMarkdownTests
 {
     private const string EXPECTED_SAMPLE = @"# Heading 1
 
@@ -61,12 +63,15 @@ After a break
 
         // code files are saved using windows format.
         // To ensure tests work on both environments, replace \r\n with environment new line 
-        var expected = EXPECTED_SAMPLE.Replace("\r\n", Environment.NewLine);
+        var expected = EXPECTED_SAMPLE
+            .Replace("\r\n", Environment.NewLine);
+
+        var deterministicResult = GuidRegex().Replace(result, "image1.png");
 
         Assert.NotNull(result);
         Assert.NotNull(media);
         Assert.NotNull(media);
-        Assert.Equal(expected, result);
+        Assert.Equal(expected, deterministicResult);
     }
 
     [Fact]
@@ -82,4 +87,16 @@ After a break
         var converter = new DocxToMarkdownProcessor("test_data/badfile.docx");
         Assert.Throws<InvalidDataException>(() => converter.Process());
     }
+    
+    [Fact]
+    public void WillMoveSpacesOutOfBold()
+    {
+        var converter = new DocxToMarkdownProcessor("test_data/boldwithextraspace.docx");
+        var expected = $"**This is a bold string.** This is not.{Environment.NewLine}{Environment.NewLine}";
+        var (result, _) = converter.Process();
+        Assert.Equal(expected, result);
+    }
+
+    [GeneratedRegex("([0-9A-Fa-f]{8}[-]?[0-9A-Fa-f]{4}[-]?[0-9A-Fa-f]{4}[-]?[0-9A-Fa-f]{4}[-]?[0-9A-Fa-f]{12}).png")]
+    private static partial Regex GuidRegex();
 }
