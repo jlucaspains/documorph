@@ -26,14 +26,14 @@ public sealed class DocumentModel(IEnumerable<MediaModel> media, IEnumerable<IDo
                          .RelationshipId
                      let image = part.OpenXmlPart as ImagePart
                      let fileName = image.Uri.ToString()[(image.Uri.ToString().LastIndexOf('/') + 1)..]
-                     select new MediaModel(blip?.Embed?.Value ?? string.Empty, fileName, GetBytesFromStream(image.GetStream()))).ToList();
+                     select new MediaModel(blip?.Embed?.Value ?? string.Empty, fileName, image.ContentType, GetUniqueFileName(fileName), GetBytesFromStream(image.GetStream()))).ToList();
 
         foreach (var element in body?.ChildElements ?? new())
         {
             switch (element)
             {
                 case Paragraph paragraph:
-                    children.Add(ParagraphModel.FromParagraph(paragraph, numberingDefinitionsPart, hyperlinkRelationships, parts));
+                    children.Add(ParagraphModel.FromParagraph(paragraph, numberingDefinitionsPart, hyperlinkRelationships, media));
                     break;
                 case Table table:
                     children.Add(TableModel.FromTable(table, hyperlinkRelationships));
@@ -51,5 +51,11 @@ public sealed class DocumentModel(IEnumerable<MediaModel> media, IEnumerable<IDo
         using var memoryStream = new MemoryStream();
         stream.CopyTo(memoryStream);
         return memoryStream.ToArray();
+    }
+
+    private static string GetUniqueFileName(string fileName)
+    {
+        var extension = Path.GetExtension(fileName);
+        return $"{Guid.NewGuid()}{extension}"; 
     }
 }

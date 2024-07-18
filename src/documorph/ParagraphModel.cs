@@ -17,7 +17,7 @@ public sealed class ParagraphModel(bool isList, string? listFormat, int listItem
     public bool IsEmpty {get; private set; } = !children.Any();
     public IEnumerable<IParagraphChildModel> Children { get; private set; } = children;
 
-    public static ParagraphModel FromParagraph(Paragraph paragraph, NumberingDefinitionsPart? numberingDefinitionsPart, IEnumerable<HyperlinkRelationship> hyperlinkRelationships, IEnumerable<IdPartPair> parts)
+    public static ParagraphModel FromParagraph(Paragraph paragraph, NumberingDefinitionsPart? numberingDefinitionsPart, IEnumerable<HyperlinkRelationship> hyperlinkRelationships, IEnumerable<MediaModel> parts)
     {
         var children = paragraph.ChildElements
             .Select<OpenXmlElement, IParagraphChildModel?>(element => element switch
