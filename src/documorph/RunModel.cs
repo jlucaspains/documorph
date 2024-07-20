@@ -18,7 +18,7 @@ public sealed class RunModel(bool IsBold, bool isItalic, bool isStrike,
     public ImageModel? Image { get; private set; } = image;
     public bool IsBreak { get; private set; } = isBreak;
 
-    public static RunModel FromRun(Run run, IEnumerable<IdPartPair> parts)
+    public static RunModel FromRun(Run run, IEnumerable<MediaModel> parts)
     {
         var isBold = false;
         var isItalic = false;
@@ -57,7 +57,7 @@ public sealed class RunModel(bool IsBold, bool isItalic, bool isStrike,
         return new RunModel(isBold, isItalic, isStrike, isUnderline, isText, text, isImage, image, isBreak);
     }
 
-    private static ImageModel? GetImageModel(Drawing drawing, IEnumerable<IdPartPair> parts)
+    private static ImageModel? GetImageModel(Drawing drawing, IEnumerable<MediaModel> parts)
     {
         var images = from graphic in drawing
                 .Descendants<DocumentFormat.OpenXml.Drawing.Graphic>()
@@ -66,11 +66,9 @@ public sealed class RunModel(bool IsBold, bool isItalic, bool isStrike,
                      let nvdp = pic?.Descendants<DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties>().FirstOrDefault()
                      let blip = pic?.Descendants<DocumentFormat.OpenXml.Drawing.Blip>().FirstOrDefault()
                      join part in parts on blip?.Embed?.Value equals part
-                         .RelationshipId
-                     let image = part.OpenXmlPart as ImagePart
-                     let fileName = image?.Uri.ToString()[(image.Uri.ToString().LastIndexOf('/') + 1)..]
+                         .Id
                      let description = (nvdp?.Description?.Value ?? string.Empty).Replace("\n", " ")
-                     select new ImageModel(fileName, image.ContentType, description);
+                     select new ImageModel(part.UniqueFileName, part.MimeType, description);
 
         return images.FirstOrDefault();
     }

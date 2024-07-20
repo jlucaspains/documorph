@@ -13,7 +13,7 @@ public class RunModelTests
 <w:r xmlns:w=""http://schemas.openxmlformats.org/wordprocessingml/2006/main"">
     <w:t xml:space=""preserve"">A simple text without formatting</w:t>
 </w:r>");
-        var parts = new List<IdPartPair>();
+        var parts = new List<MediaModel>();
 
         // Act
         var model = RunModel.FromRun(run, parts);
@@ -42,7 +42,7 @@ public class RunModelTests
     </w:rPr>
     <w:t>A bold text</w:t>
 </w:r>");
-        var parts = new List<DocumentFormat.OpenXml.Packaging.IdPartPair>();
+        var parts = new List<MediaModel>();
 
         // Act
         var model = RunModel.FromRun(run, parts);
@@ -71,7 +71,7 @@ public class RunModelTests
     </w:rPr>
     <w:t>An italic text</w:t>
 </w:r>");
-        var parts = new List<IdPartPair>();
+        var parts = new List<MediaModel>();
 
         // Act
         var model = RunModel.FromRun(run, parts);
@@ -100,7 +100,7 @@ public class RunModelTests
     <w:t>Striked</w:t>
 </w:r>
 ");
-        var parts = new List<IdPartPair>();
+        var parts = new List<MediaModel>();
 
         // Act
         var model = RunModel.FromRun(run, parts);
@@ -129,7 +129,7 @@ public class RunModelTests
     <w:t>Underline</w:t>
 </w:r>
 ");
-        var parts = new List<IdPartPair>();
+        var parts = new List<MediaModel>();
 
         // Act
         var model = RunModel.FromRun(run, parts);
@@ -201,12 +201,9 @@ xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"">
         </wp:inline>
     </w:drawing>
 </w:r>");
-        using var wordDoc = WordprocessingDocument.Create("AppendMarkdown_Should_AppendImage.docx", WordprocessingDocumentType.Document);
-        wordDoc.AddMainDocumentPart();
-        ImagePart imagePart = wordDoc.MainDocumentPart!.AddImagePart(ImagePartType.Jpeg);
-
-        var parts = new List<IdPartPair>{
-            new("rId6", imagePart)
+        var imageFile = $"{Guid.NewGuid().ToString()}.jpeg";
+        var parts = new List<MediaModel>{
+            new("rId6", "image.jpeg", "image/jpeg", imageFile, [])
         };
 
         // Act
@@ -221,7 +218,7 @@ xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"">
         Assert.True(model.IsImage);
         Assert.Equal(string.Empty, model.Text);
         Assert.False(model.IsBreak);
-        Assert.Equal("image.jpg", model.Image?.FileName);
+        Assert.Equal(imageFile, model.Image?.FileName);
         Assert.Equal("A screenshot of a computer Description automatically generated", model.Image?.Description);
     }
 
@@ -233,7 +230,7 @@ xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"">
 <w:r xmlns:w=""http://schemas.openxmlformats.org/wordprocessingml/2006/main"">
     <w:br w:type=""page""/>
 </w:r>");
-        var parts = new List<IdPartPair>();
+        var parts = new List<MediaModel>();
 
         // Act
         var model = RunModel.FromRun(run, parts);
