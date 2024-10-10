@@ -26,7 +26,7 @@ dotnet tool install --global lpains.documorph.cli --prerelease
 Upon installation, access the tool by executing `documorph` in your terminal. For specific command details, refer to the sections below or utilize the CLI help via `documorph -h`.
 
 ```powershell
-documorph md --in <input> --out <output> [-?, -h, --help]
+documorph md --in <input> --out <output> [--media-directory <directory path>] [-?, -h, --help]
 ```
 
 Basic usage example:
@@ -57,7 +57,7 @@ Output file (target.md):
 You can also add links like this: [Link](https://www.example.com)
 
 And images like this:
-![Image](image1.png)
+![Image](./a2666ae9-71c9-4d03-964d-a11895fabcad.png)
 
 And **bold** or *italic* or __underscore__ or ~~striked~~ text.
 ```
