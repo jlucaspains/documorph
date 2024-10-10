@@ -117,6 +117,15 @@ After a break
         Assert.Equal(expected, result);
     }
 
+    [Fact]
+    public void WillCorrectlyHandleBoldAndItalics()
+    {
+        var converter = new DocxToMarkdownProcessor("test_data/boldanditalics.docx", ".");
+        var expected = $"***Bold and Italics***{Environment.NewLine}{Environment.NewLine}**__Bold and Underline__**{Environment.NewLine}{Environment.NewLine}";
+        var (result, _) = converter.Process();
+        Assert.Equal(expected, result);
+    }
+
     [GeneratedRegex("([0-9A-Fa-f]{8}[-]?[0-9A-Fa-f]{4}[-]?[0-9A-Fa-f]{4}[-]?[0-9A-Fa-f]{4}[-]?[0-9A-Fa-f]{12}).png")]
     private static partial Regex GuidRegex();
 }
