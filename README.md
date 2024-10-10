@@ -11,7 +11,7 @@ dotnet package install lpains.documorph --prerelease
 ### Getting Started
 ```csharp
 // Create an instance of the DocxToMarkdownProcessor class. This class requires the .docx file path.
-var processor = new DocxToMarkdownProcessor(source.FullName);
+var processor = new DocxToMarkdownProcessor(source.FullName, ".");
 
 // Invoke the Process() method which returns the markdown content and media files.
 var (markdown, media) = processor.Process();
