@@ -69,4 +69,8 @@ The input `.docx` file or directory. If a folder is provided, all the `.docx` fi
 
 #### `--out` (required)
 
-The output file or directory full path. The media files will be dropped in the folder where the output files are in.
+The output file or directory full path.
+
+#### `--media-location`
+
+The output directory full path to store the media files in. If this option is not provided, the media files are dropped in the folder where the output files are in.
