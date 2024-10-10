@@ -109,7 +109,7 @@ static async Task ConvertFile(FileInfo fileToProcess, FileInfo targetFile,
 
     foreach (var item in media)
     {
-        var mediaPath = Path.Combine(mediaDirectory.FullName, item.UniqueFileName);
+        var mediaPath = Path.Combine(targetFileDirectory, item.UniqueFileName);
 
         await File.WriteAllBytesAsync(mediaPath, item.Content);
     }

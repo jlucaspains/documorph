@@ -27,7 +27,7 @@ public sealed class DocumentModel(IEnumerable<MediaModel> media, IEnumerable<IDo
                      let image = part.OpenXmlPart as ImagePart
                      let fileName = image.Uri.ToString()[(image.Uri.ToString().LastIndexOf('/') + 1)..]
                      select new MediaModel(blip?.Embed?.Value ?? string.Empty, fileName, image.ContentType,
-                        Path.Combine(mediaOutputRelativePath, GetUniqueFileName(fileName)), GetBytesFromStream(image.GetStream()))).ToList();
+                        CombinePaths(mediaOutputRelativePath, GetUniqueFileName(fileName)), GetBytesFromStream(image.GetStream()))).ToList();
 
         foreach (var element in body?.ChildElements ?? new())
         {
@@ -45,6 +45,13 @@ public sealed class DocumentModel(IEnumerable<MediaModel> media, IEnumerable<IDo
         var documentModel = new DocumentModel(media, children);
 
         return documentModel;
+    }
+
+    private static string CombinePaths(string path1, string path2)
+    {
+        var result = Path.Combine(path1, path2);
+        
+        return result.Replace('\\', '/');
     }
 
     private static byte[] GetBytesFromStream(Stream stream)
