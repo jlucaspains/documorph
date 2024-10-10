@@ -146,7 +146,7 @@ public sealed class DocxToMarkdownProcessor(string inputFile, string mediaOutput
         var spaces = text.Reverse().TakeWhile(char.IsWhiteSpace).ToList();
         builder.Append(text.TrimEnd(' '));
 
-        foreach (var symbol in markdownSymbols)
+        foreach (var symbol in markdownSymbols.Reverse())
         {
             if (symbol.Key(runModel, nextRunModel))
                 builder.Append(symbol.Value);
