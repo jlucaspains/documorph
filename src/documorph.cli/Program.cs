@@ -13,17 +13,25 @@ var targetFileOption = new Option<FileInfo>(
             description: "The output file or directory name.")
 { IsRequired = true };
 
+// Add option for unique media name option
+var mediaLocationOption = new Option<DirectoryInfo>(
+            name: "--media-location",
+            description: "Media output directory.")
+{ IsRequired = false };
+
 rootCommand.AddCommand(markdownCommand);
 
 markdownCommand.AddOption(sourceFileOption);
 markdownCommand.AddOption(targetFileOption);
+markdownCommand.AddOption(mediaLocationOption);
 
 markdownCommand.SetHandler(Convert,
-            sourceFileOption, targetFileOption);
+            sourceFileOption, targetFileOption, mediaLocationOption);
 
 return await rootCommand.InvokeAsync(args);
 
-static async Task<int> Convert(FileInfo source, FileInfo target)
+static async Task<int> Convert(FileInfo source, FileInfo target,
+    DirectoryInfo? mediaLocation)
 {
     Utilities.WriteInformation("Converting {0} to {1}", source.FullName, target.FullName);
 
@@ -35,10 +43,10 @@ static async Task<int> Convert(FileInfo source, FileInfo target)
         return 1;
     }
 
-    var outputDirectory = Path.GetDirectoryName(target.FullName)
+    var fileOutputDirectory = Path.GetDirectoryName(target.FullName)
             ?? "";
-    
-    if (isSourceDirectory && outputDirectory != target.FullName.TrimEnd('/').TrimEnd('\\'))
+
+    if (isSourceDirectory && fileOutputDirectory != target.FullName.TrimEnd('/').TrimEnd('\\'))
     {
         Utilities.WriteError("When source is a directory, target must also be a directory.");
         return 1;
@@ -48,19 +56,27 @@ static async Task<int> Convert(FileInfo source, FileInfo target)
         ? Directory.GetFiles(source.FullName, "*.docx", SearchOption.TopDirectoryOnly).Select(item => new FileInfo(item))
         : [source];
 
-    if (!Directory.Exists(outputDirectory))
+    if (!Directory.Exists(fileOutputDirectory))
     {
-        Utilities.WriteInformation("Creating output directory {0}.", outputDirectory);
-        Directory.CreateDirectory(outputDirectory);
+        Utilities.WriteInformation("Creating output directory {0}.", fileOutputDirectory);
+        Directory.CreateDirectory(fileOutputDirectory);
+    }
+
+    var mediaOutputDirectory = mediaLocation ?? new DirectoryInfo(fileOutputDirectory);
+
+    if (!mediaOutputDirectory.Exists)
+    {
+        Utilities.WriteInformation("Creating media output directory {0}.", fileOutputDirectory);
+        mediaOutputDirectory.Create();
     }
 
     foreach (var fileToProcess in filesToProcess)
     {
-        var targetFile = outputDirectory == target.FullName || isSourceDirectory
-            ? new FileInfo(Path.Combine(outputDirectory, Path.GetFileNameWithoutExtension(fileToProcess.FullName) + ".md"))
+        var targetFile = fileOutputDirectory == target.FullName || isSourceDirectory
+            ? new FileInfo(Path.Combine(fileOutputDirectory, Path.GetFileNameWithoutExtension(fileToProcess.FullName) + ".md"))
             : target;
 
-        await ConvertFile(fileToProcess, targetFile, outputDirectory);
+        await ConvertFile(fileToProcess, targetFile, mediaOutputDirectory);
     }
 
     Utilities.WriteSuccess("Conversion completed successfully.");
@@ -68,11 +84,15 @@ static async Task<int> Convert(FileInfo source, FileInfo target)
     return 0;
 }
 
-static async Task ConvertFile(FileInfo fileToProcess, FileInfo targetFile, string mediaDirectory)
+static async Task ConvertFile(FileInfo fileToProcess, FileInfo targetFile,
+    DirectoryInfo mediaDirectory)
 {
     Utilities.WriteInformation("Converting {0}...", fileToProcess.FullName);
 
-    var processor = new DocxToMarkdownProcessor(fileToProcess.FullName);
+    var targetFileDirectory = targetFile.DirectoryName ?? mediaDirectory.FullName;
+    var mediaOutputRelativePath = Path.GetRelativePath(targetFileDirectory, mediaDirectory.FullName);
+
+    var processor = new DocxToMarkdownProcessor(fileToProcess.FullName, mediaOutputRelativePath);
     var (markdown, media) = processor.Process();
 
     using var markdownFileStream = targetFile.CreateText();
@@ -89,8 +109,7 @@ static async Task ConvertFile(FileInfo fileToProcess, FileInfo targetFile, strin
 
     foreach (var item in media)
     {
-        var mediaPath = Path.Combine(mediaDirectory, item.UniqueFileName);
-        var directory = Path.GetDirectoryName(mediaPath);
+        var mediaPath = Path.Combine(mediaDirectory.FullName, item.UniqueFileName);
 
         await File.WriteAllBytesAsync(mediaPath, item.Content);
     }

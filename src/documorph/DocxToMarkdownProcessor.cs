@@ -8,14 +8,14 @@ namespace documorph;
 /// <param name="inputFile">The .docx file to be converted</param>
 /// <exception cref="FileNotFoundException">Thrown when the input file does not exist</exception>
 /// <exception cref="InvalidDataException">Thrown when the input file is not a valid .docx file</exception>
-public sealed class DocxToMarkdownProcessor(string inputFile)
+public sealed class DocxToMarkdownProcessor(string inputFile, string mediaOutputRelativePath)
 {
     public (string Result, IEnumerable<MediaModel> Media) Process()
     {
         using var wordPackage = Package.Open(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read);
         using var wordDocument = WordprocessingDocument.Open(wordPackage);
 
-        var model = DocumentModel.FromDocument(wordDocument);
+        var model = DocumentModel.FromDocument(wordDocument, mediaOutputRelativePath);
         var result = new StringBuilder();
 
         var children = model.Children.Select((x, i) => (Element: x, Index: i)).ToList();

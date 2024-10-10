@@ -46,7 +46,7 @@ Another paragraph.
 
 > This is a quote3
 
-![A screenshot of a computer  Description automatically generated](image1.png)
+![A screenshot of a computer  Description automatically generated](./image1.png)
 
 
 
@@ -58,7 +58,7 @@ After a break
     [Fact]
     public void ValidDocxReturnsValidMarkdown()
     {
-        var converter = new DocxToMarkdownProcessor("test_data/docconverter.docx");
+        var converter = new DocxToMarkdownProcessor("test_data/docconverter.docx", ".");
         var (result, media) = converter.Process();
 
         // code files are saved using windows format.
@@ -75,23 +75,43 @@ After a break
     }
 
     [Fact]
+    public void ValidDocxWithMediaRelativePathReturnsValidMarkdown()
+    {
+        var converter = new DocxToMarkdownProcessor("test_data/docconverter.docx", "../../");
+        var (result, media) = converter.Process();
+
+        // code files are saved using windows format.
+        // To ensure tests work on both environments, replace \r\n with environment new line 
+        var expected = EXPECTED_SAMPLE
+            .Replace("\r\n", Environment.NewLine)
+            .Replace("./image1.png", "../../image1.png");
+
+        var deterministicResult = GuidRegex().Replace(result, "image1.png");
+
+        Assert.NotNull(result);
+        Assert.NotNull(media);
+        Assert.NotNull(media);
+        Assert.Equal(expected, deterministicResult);
+    }
+
+    [Fact]
     public void NonExistingFileThrowsError()
     {
-        var converter = new DocxToMarkdownProcessor("test_data/invalid.docx");
+        var converter = new DocxToMarkdownProcessor("test_data/invalid.docx", ".");
         Assert.Throws<FileNotFoundException>(() => converter.Process());
     }
 
     [Fact]
     public void BadFileThrowsError()
     {
-        var converter = new DocxToMarkdownProcessor("test_data/badfile.docx");
+        var converter = new DocxToMarkdownProcessor("test_data/badfile.docx", ".");
         Assert.Throws<InvalidDataException>(() => converter.Process());
     }
     
     [Fact]
     public void WillMoveSpacesOutOfBold()
     {
-        var converter = new DocxToMarkdownProcessor("test_data/boldwithextraspace.docx");
+        var converter = new DocxToMarkdownProcessor("test_data/boldwithextraspace.docx", ".");
         var expected = $"**This is a bold string.** This is not.{Environment.NewLine}{Environment.NewLine}";
         var (result, _) = converter.Process();
         Assert.Equal(expected, result);

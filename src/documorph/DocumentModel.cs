@@ -6,8 +6,8 @@ public sealed class DocumentModel(IEnumerable<MediaModel> media, IEnumerable<IDo
 {
     public IEnumerable<MediaModel> Media { get; private set; } = media;
     public IEnumerable<IDocumentChildren> Children { get; private set; } = children;
-    
-    public static DocumentModel FromDocument(WordprocessingDocument document)
+
+    public static DocumentModel FromDocument(WordprocessingDocument document, string mediaOutputRelativePath)
     {
         var body = document?.MainDocumentPart?.Document.Body;
         var numberingDefinitionsPart = document?.MainDocumentPart?.NumberingDefinitionsPart;
@@ -26,7 +26,8 @@ public sealed class DocumentModel(IEnumerable<MediaModel> media, IEnumerable<IDo
                          .RelationshipId
                      let image = part.OpenXmlPart as ImagePart
                      let fileName = image.Uri.ToString()[(image.Uri.ToString().LastIndexOf('/') + 1)..]
-                     select new MediaModel(blip?.Embed?.Value ?? string.Empty, fileName, image.ContentType, GetUniqueFileName(fileName), GetBytesFromStream(image.GetStream()))).ToList();
+                     select new MediaModel(blip?.Embed?.Value ?? string.Empty, fileName, image.ContentType,
+                        Path.Combine(mediaOutputRelativePath, GetUniqueFileName(fileName)), GetBytesFromStream(image.GetStream()))).ToList();
 
         foreach (var element in body?.ChildElements ?? new())
         {
@@ -56,6 +57,6 @@ public sealed class DocumentModel(IEnumerable<MediaModel> media, IEnumerable<IDo
     private static string GetUniqueFileName(string fileName)
     {
         var extension = Path.GetExtension(fileName);
-        return $"{Guid.NewGuid()}{extension}"; 
+        return $"{Guid.NewGuid()}{extension}";
     }
 }
