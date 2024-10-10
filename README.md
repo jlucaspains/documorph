@@ -11,7 +11,7 @@ dotnet package install lpains.documorph --prerelease
 ### Getting Started
 ```csharp
 // Create an instance of the DocxToMarkdownProcessor class. This class requires the .docx file path.
-var processor = new DocxToMarkdownProcessor(source.FullName);
+var processor = new DocxToMarkdownProcessor(source.FullName, ".");
 
 // Invoke the Process() method which returns the markdown content and media files.
 var (markdown, media) = processor.Process();
@@ -26,7 +26,7 @@ dotnet tool install --global lpains.documorph.cli --prerelease
 Upon installation, access the tool by executing `documorph` in your terminal. For specific command details, refer to the sections below or utilize the CLI help via `documorph -h`.
 
 ```powershell
-documorph md --in <input> --out <output> [-?, -h, --help]
+documorph md --in <input> --out <output> [--media-directory <directory path>] [-?, -h, --help]
 ```
 
 Basic usage example:
@@ -57,7 +57,7 @@ Output file (target.md):
 You can also add links like this: [Link](https://www.example.com)
 
 And images like this:
-![Image](image1.png)
+![Image](./a2666ae9-71c9-4d03-964d-a11895fabcad.png)
 
 And **bold** or *italic* or __underscore__ or ~~striked~~ text.
 ```
@@ -69,4 +69,8 @@ The input `.docx` file or directory. If a folder is provided, all the `.docx` fi
 
 #### `--out` (required)
 
-The output file or directory full path. The media files will be dropped in the folder where the output files are in.
+The output file or directory full path.
+
+#### `--media-location`
+
+The output directory full path to store the media files in. If this option is not provided, the media files are dropped in the folder where the output files are in.
