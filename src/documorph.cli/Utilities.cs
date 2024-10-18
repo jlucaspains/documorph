@@ -39,3 +39,5 @@ static partial class Utilities
     [GeneratedRegex("\\{[0-9]\\}")]
     private static partial Regex TemplateRegex();
 }
+
+enum TargetType { Markdown, AsciiDoc }
