@@ -3,16 +3,16 @@ using DocumentFormat.OpenXml.Linq;
 namespace documorph;
 
 /// <summary>
-/// Converts a .docx file to markdown. The file is opened in read-only mode with file share capabilities.
+/// Converts a .docx file to AsciiDoc. The Docx file is opened in read-only mode with file share capabilities.
 /// </summary>
 /// <param name="inputFile">The .docx file to be converted</param>
 /// <param name="mediaOutputRelativePath">The relative path to the media output directory</param>
 /// <exception cref="FileNotFoundException">Thrown when the input file does not exist</exception>
 /// <exception cref="InvalidDataException">Thrown when the input file is not a valid .docx file</exception>
-public sealed class DocxToMarkdownProcessor(string inputFile, string mediaOutputRelativePath): IDocxToTargetConverter
+public sealed class DocxToAsciiDocProcessor(string inputFile, string mediaOutputRelativePath): IDocxToTargetConverter
 {
     /// <summary>
-    /// Processes the DOCX file and converts it to markdown format.
+    /// Processes the DOCX file and converts it to the AsciiDoc format.
     /// </summary>
     /// <returns>
     /// A tuple containing the result as a string and an enumerable collection of <see cref="MediaModel"/> objects.
@@ -47,18 +47,18 @@ public sealed class DocxToMarkdownProcessor(string inputFile, string mediaOutput
     {
         if (paragraphModel.IsHeading)
         {
-            builder.Append($"{new string('#', paragraphModel.HeadingLevel)} ");
+            builder.Append($"{new string('=', paragraphModel.HeadingLevel)} ");
         }
 
         if (paragraphModel.IsList)
         {
             var listMarker = paragraphModel.ListFormat switch
             {
-                "decimal" => "1.",
-                "bullet" => "-",
+                "decimal" => new string('.', paragraphModel.ListItemLevel+1),
+                "bullet" => new string('*', paragraphModel.ListItemLevel+1),
                 _ => ""
             };
-            builder.Append($"{new string(' ', paragraphModel.ListItemLevel * 3)}{listMarker} ");
+            builder.Append($"{listMarker} ");
         }
 
         if (paragraphModel.IsQuote)
@@ -86,7 +86,7 @@ public sealed class DocxToMarkdownProcessor(string inputFile, string mediaOutput
         {
             builder.AppendLine();
         }
-        if (!skipNewLine && 
+        if (!skipNewLine &&
             (!paragraphModel.IsList || (!nextParagraphModel?.IsList ?? true)) &&
             !paragraphModel.IsEmpty)
         {
@@ -98,25 +98,34 @@ public sealed class DocxToMarkdownProcessor(string inputFile, string mediaOutput
     {
         var isFirstRow = true;
 
+        var columns = tableModel.Rows.First().Select(x => "1");
+        builder.AppendLine($"[cols=\"{string.Join(",", columns)}\"]");
+        builder.AppendLine("|===");
+
         foreach (var row in tableModel.Rows)
         {
+            if (isFirstRow)
+            {
+                foreach (var cell in row)
+                {
+                    builder.Append('|');
+
+                    ProcessParagraph(cell, null, true, builder);
+                }
+                isFirstRow = false;
+                continue;
+            }
+
             foreach (var cell in row)
             {
+                builder.AppendLine();
                 builder.Append('|');
 
                 ProcessParagraph(cell, null, true, builder);
             }
-
-            builder.AppendLine("|");
-
-            if (isFirstRow)
-            {
-                builder.AppendLine("|" + string.Join("", Enumerable.Repeat("---|", row.Count())));
-                isFirstRow = false;
-            }
         }
-
         builder.AppendLine();
+        builder.AppendLine("|===");
     }
 
     private void ProcessRun(RunModel runModel, RunModel? previousRunModel, RunModel? nextRunModel, StringBuilder builder)
@@ -127,17 +136,17 @@ public sealed class DocxToMarkdownProcessor(string inputFile, string mediaOutput
             return;
         }
 
-        var markdownSymbols = new Dictionary<Func<RunModel, RunModel?, bool>, string>
+        var markdownSymbols = new Dictionary<Func<RunModel, RunModel?, bool>, (string Start, string End)>
         {
-            { (rm, reference) => rm.IsBold && !(reference?.IsBold ?? false), "**" },
-            { (rm, reference) => rm.IsItalic && !(reference?.IsItalic ?? false), "*" },
-            { (rm, reference) => rm.IsStrike && !(reference?.IsStrike ?? false), "~~" },
-            { (rm, reference) => rm.IsUnderline && !(reference?.IsUnderline ?? false), "__" }
+            { (rm, reference) => rm.IsBold && !(reference?.IsBold ?? false), ("*", "*") },
+            { (rm, reference) => rm.IsItalic && !(reference?.IsItalic ?? false), ("_", "_") },
+            { (rm, reference) => rm.IsStrike && !(reference?.IsStrike ?? false), ("[.line-through]#", "#") },
+            { (rm, reference) => rm.IsUnderline && !(reference?.IsUnderline ?? false), ("[.underline]#", "#") }
         };
 
         if (runModel.IsImage)
         {
-            builder.Append($"![");
+            builder.Append($"image::{runModel.Image?.FileName}[");
         }
 
         var text = runModel.IsText ? runModel.Text : runModel.Image?.Description;
@@ -146,7 +155,7 @@ public sealed class DocxToMarkdownProcessor(string inputFile, string mediaOutput
         foreach (var symbol in markdownSymbols)
         {
             if (symbol.Key(runModel, previousRunModel))
-                builder.Append(symbol.Value);
+                builder.Append(symbol.Value.Start);
         }
 
         // move spaces at the end of text to a new string
@@ -156,20 +165,20 @@ public sealed class DocxToMarkdownProcessor(string inputFile, string mediaOutput
         foreach (var symbol in markdownSymbols.Reverse())
         {
             if (symbol.Key(runModel, nextRunModel))
-                builder.Append(symbol.Value);
+                builder.Append(symbol.Value.End);
         }
 
         builder.Append(string.Join(string.Empty, spaces));
 
         if (runModel.IsImage)
         {
-            builder.Append($"]({runModel.Image?.FileName})");
+            builder.Append("]");
         }
     }
 
     private void ProcessHyperlink(HyperlinkModel hyperlink, StringBuilder builder)
     {
-        builder.Append('[');
+        builder.Append($"{hyperlink.Uri}[");
 
         var children = hyperlink.Runs.Select((x, i) => (Element: x, Index: i)).ToList();
         foreach (var (element, index) in children)
@@ -179,6 +188,6 @@ public sealed class DocxToMarkdownProcessor(string inputFile, string mediaOutput
             ProcessRun(element, previousRunModel, nextRunModel, builder);
         }
 
-        builder.Append($"]({hyperlink.Uri})");
+        builder.Append("]");
     }
 }

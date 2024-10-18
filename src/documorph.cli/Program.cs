@@ -1,5 +1,6 @@
 var rootCommand = new RootCommand();
 var markdownCommand = new Command("md", "Converts a .docx file to markdown.");
+var asciidocCommand = new Command("asciidoc", "Converts a .docx file to asciidoc.");
 
 // Add option for source file or directory
 var sourceFileOption = new Option<FileInfo>(
@@ -20,17 +21,37 @@ var mediaLocationOption = new Option<DirectoryInfo>(
 { IsRequired = false };
 
 rootCommand.AddCommand(markdownCommand);
+rootCommand.AddCommand(asciidocCommand);
 
 markdownCommand.AddOption(sourceFileOption);
 markdownCommand.AddOption(targetFileOption);
 markdownCommand.AddOption(mediaLocationOption);
 
-markdownCommand.SetHandler(Convert,
-            sourceFileOption, targetFileOption, mediaLocationOption);
+asciidocCommand.AddOption(sourceFileOption);
+asciidocCommand.AddOption(targetFileOption);
+asciidocCommand.AddOption(mediaLocationOption);
+
+markdownCommand.SetHandler(ConvertMarkdown,
+    sourceFileOption, targetFileOption, mediaLocationOption);
+
+asciidocCommand.SetHandler(ConvertAsciiDoc,
+    sourceFileOption, targetFileOption, mediaLocationOption);
 
 return await rootCommand.InvokeAsync(args);
 
-static async Task<int> Convert(FileInfo source, FileInfo target,
+static async Task<int> ConvertMarkdown(FileInfo source, FileInfo target,
+    DirectoryInfo? mediaLocation)
+{
+    return await Convert(TargetType.Markdown, source, target, mediaLocation);
+}
+
+static async Task<int> ConvertAsciiDoc(FileInfo source, FileInfo target,
+    DirectoryInfo? mediaLocation)
+{
+    return await Convert(TargetType.AsciiDoc, source, target, mediaLocation);
+}
+
+static async Task<int> Convert(TargetType targetType, FileInfo source, FileInfo target,
     DirectoryInfo? mediaLocation)
 {
     Utilities.WriteInformation("Converting {0} to {1}", source.FullName, target.FullName);
@@ -70,13 +91,20 @@ static async Task<int> Convert(FileInfo source, FileInfo target,
         mediaOutputDirectory.Create();
     }
 
+    var defaultExtension = targetType switch
+    {
+        TargetType.Markdown => ".md",
+        TargetType.AsciiDoc => ".asciidoc",
+        _ => throw new NotImplementedException(),
+    };
+
     foreach (var fileToProcess in filesToProcess)
     {
         var targetFile = fileOutputDirectory == target.FullName || isSourceDirectory
-            ? new FileInfo(Path.Combine(fileOutputDirectory, Path.GetFileNameWithoutExtension(fileToProcess.FullName) + ".md"))
+            ? new FileInfo(Path.Combine(fileOutputDirectory, Path.GetFileNameWithoutExtension(fileToProcess.FullName) + defaultExtension))
             : target;
 
-        await ConvertFile(fileToProcess, targetFile, mediaOutputDirectory);
+        await ConvertFile(targetType, fileToProcess, targetFile, mediaOutputDirectory);
     }
 
     Utilities.WriteSuccess("Conversion completed successfully.");
@@ -84,7 +112,7 @@ static async Task<int> Convert(FileInfo source, FileInfo target,
     return 0;
 }
 
-static async Task ConvertFile(FileInfo fileToProcess, FileInfo targetFile,
+static async Task ConvertFile(TargetType targetType, FileInfo fileToProcess, FileInfo targetFile,
     DirectoryInfo mediaDirectory)
 {
     Utilities.WriteInformation("Converting {0}...", fileToProcess.FullName);
@@ -92,7 +120,13 @@ static async Task ConvertFile(FileInfo fileToProcess, FileInfo targetFile,
     var targetFileDirectory = targetFile.DirectoryName ?? mediaDirectory.FullName;
     var mediaOutputRelativePath = Path.GetRelativePath(targetFileDirectory, mediaDirectory.FullName);
 
-    var processor = new DocxToMarkdownProcessor(fileToProcess.FullName, mediaOutputRelativePath);
+    IDocxToTargetConverter processor = targetType switch
+    {
+        TargetType.Markdown => new DocxToMarkdownProcessor(fileToProcess.FullName, mediaOutputRelativePath),
+        TargetType.AsciiDoc => new DocxToAsciiDocProcessor(fileToProcess.FullName, mediaOutputRelativePath),
+        _ => throw new InvalidOperationException("Invalid target type.")
+    };
+    // var processor = new DocxToMarkdownProcessor(fileToProcess.FullName, mediaOutputRelativePath);
     var (markdown, media) = processor.Process();
 
     using var markdownFileStream = targetFile.CreateText();
