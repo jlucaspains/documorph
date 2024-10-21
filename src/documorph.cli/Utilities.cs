@@ -40,4 +40,4 @@ static partial class Utilities
     private static partial Regex TemplateRegex();
 }
 
-enum TargetType { Markdown, AsciiDoc }
+enum TargetType { Markdown, AsciiDoc, Wiki }
