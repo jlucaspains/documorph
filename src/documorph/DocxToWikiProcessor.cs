@@ -114,7 +114,7 @@ public sealed class DocxToWikiProcessor(string inputFile, string mediaOutputRela
         foreach (var row in tableModel.Rows)
         {
             if (!isFirstRow)
-                builder.AppendLine("-");
+                builder.AppendLine("|-");
 
             foreach (var cell in row)
             {
