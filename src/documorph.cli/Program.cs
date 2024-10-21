@@ -1,6 +1,7 @@
 var rootCommand = new RootCommand();
 var markdownCommand = new Command("md", "Converts a .docx file to markdown.");
 var asciidocCommand = new Command("asciidoc", "Converts a .docx file to asciidoc.");
+var wikiCommand = new Command("wiki", "Converts a .docx file to wikimedia format.");
 
 // Add option for source file or directory
 var sourceFileOption = new Option<FileInfo>(
@@ -22,6 +23,7 @@ var mediaLocationOption = new Option<DirectoryInfo>(
 
 rootCommand.AddCommand(markdownCommand);
 rootCommand.AddCommand(asciidocCommand);
+rootCommand.AddCommand(wikiCommand);
 
 markdownCommand.AddOption(sourceFileOption);
 markdownCommand.AddOption(targetFileOption);
@@ -31,10 +33,17 @@ asciidocCommand.AddOption(sourceFileOption);
 asciidocCommand.AddOption(targetFileOption);
 asciidocCommand.AddOption(mediaLocationOption);
 
+wikiCommand.AddOption(sourceFileOption);
+wikiCommand.AddOption(targetFileOption);
+wikiCommand.AddOption(mediaLocationOption);
+
 markdownCommand.SetHandler(ConvertMarkdown,
     sourceFileOption, targetFileOption, mediaLocationOption);
 
 asciidocCommand.SetHandler(ConvertAsciiDoc,
+    sourceFileOption, targetFileOption, mediaLocationOption);
+
+wikiCommand.SetHandler(ConvertWiki,
     sourceFileOption, targetFileOption, mediaLocationOption);
 
 return await rootCommand.InvokeAsync(args);
@@ -49,6 +58,12 @@ static async Task<int> ConvertAsciiDoc(FileInfo source, FileInfo target,
     DirectoryInfo? mediaLocation)
 {
     return await Convert(TargetType.AsciiDoc, source, target, mediaLocation);
+}
+
+static async Task<int> ConvertWiki(FileInfo source, FileInfo target,
+    DirectoryInfo? mediaLocation)
+{
+    return await Convert(TargetType.Wiki, source, target, mediaLocation);
 }
 
 static async Task<int> Convert(TargetType targetType, FileInfo source, FileInfo target,
@@ -95,6 +110,7 @@ static async Task<int> Convert(TargetType targetType, FileInfo source, FileInfo 
     {
         TargetType.Markdown => ".md",
         TargetType.AsciiDoc => ".asciidoc",
+        TargetType.Wiki => ".wiki",
         _ => throw new NotImplementedException(),
     };
 
@@ -124,6 +140,7 @@ static async Task ConvertFile(TargetType targetType, FileInfo fileToProcess, Fil
     {
         TargetType.Markdown => new DocxToMarkdownProcessor(fileToProcess.FullName, mediaOutputRelativePath),
         TargetType.AsciiDoc => new DocxToAsciiDocProcessor(fileToProcess.FullName, mediaOutputRelativePath),
+        TargetType.Wiki => new DocxToWikiProcessor(fileToProcess.FullName, mediaOutputRelativePath),
         _ => throw new InvalidOperationException("Invalid target type.")
     };
     // var processor = new DocxToMarkdownProcessor(fileToProcess.FullName, mediaOutputRelativePath);
