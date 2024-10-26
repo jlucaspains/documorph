@@ -1,5 +1,5 @@
 # documorph
-`documorph` is a .NET package and command-line tool for converting between document file formats. The initial implementation supports only `.docx` to `.md` files, but other formats will be considered for the future.
+`documorph` is a .NET package and command-line tool for converting between document file formats. The current implementation supports `.docx` to `.md`, `.wiki`, `.asciidoc` files. Additional output formats may be considred in the future.
 
 ![documorph example](./docs/docx2md.png)
 
@@ -10,7 +10,8 @@ dotnet package install lpains.documorph --prerelease
 
 ### Getting Started
 ```csharp
-// Create an instance of the DocxToMarkdownProcessor class. This class requires the .docx file path.
+// Create an instance of a processor class. Options are DocxToMarkdownProcessor, DocxToAsciiDocProcessor, or DocxToWikiProcessor.
+// All processors require the .docx file path and a media relative path.
 var processor = new DocxToMarkdownProcessor(source.FullName, ".");
 
 // Invoke the Process() method which returns the markdown content and media files.
@@ -26,10 +27,12 @@ dotnet tool install --global lpains.documorph.cli --prerelease
 Upon installation, access the tool by executing `documorph` in your terminal. For specific command details, refer to the sections below or utilize the CLI help via `documorph -h`.
 
 ```powershell
-documorph md --in <input> --out <output> [--media-directory <directory path>] [-?, -h, --help]
+documorph md --in <input> --out <output> [--media-location <directory path>] [-?, -h, --help]
+documorph asciidoc --in <input> --out <output> [--media-location <directory path>] [-?, -h, --help]
+documorph wiki --in <input> --out <output> [--media-location <directory path>] [-?, -h, --help]
 ```
 
-Basic usage example:
+Markdown usage example:
 ```powershell
 documorph --in .\source.docx `
            --out .\target.md
@@ -62,7 +65,19 @@ And images like this:
 And **bold** or *italic* or __underscore__ or ~~striked~~ text.
 ```
 
+### Commands
+#### md
+Converts a .docx to [markdown](https://commonmark.org/help/).
+
+#### asciidoc
+Converts a .docx to [asciidoc](https://asciidoc.org/).
+
+#### wiki
+Converts a .docx to [MediaWiki](https://www.mediawiki.org/wiki/MediaWiki).
+
 ### Parameters
+All commands take the same parameters.
+
 #### `--in` (required)
 
 The input `.docx` file or directory. If a folder is provided, all the `.docx` files will be converted. Any `.docx` file should be a valid Open XML Word document.
