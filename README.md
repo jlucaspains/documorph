@@ -34,8 +34,7 @@ documorph wiki --in <input> --out <output> [--media-location <directory path>] [
 
 Markdown usage example:
 ```powershell
-documorph --in .\source.docx `
-           --out .\target.md
+documorph md --in .\source.docx --out .\target.md
 ```
 
 Output file (target.md):
