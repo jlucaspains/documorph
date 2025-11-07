@@ -79,10 +79,9 @@ static async Task<int> Convert(TargetType targetType, FileInfo source, FileInfo 
         return 1;
     }
 
-    var fileOutputDirectory = Path.GetDirectoryName(target.FullName)
-            ?? "";
+    var fileOutputDirectory = !isSourceDirectory ? Path.GetDirectoryName(target.FullName) : target.FullName;
 
-    if (isSourceDirectory && fileOutputDirectory != target.FullName.TrimEnd('/').TrimEnd('\\'))
+    if (isSourceDirectory && File.Exists(fileOutputDirectory))
     {
         Utilities.WriteError("When source is a directory, target must also be a directory.");
         return 1;
@@ -94,6 +93,7 @@ static async Task<int> Convert(TargetType targetType, FileInfo source, FileInfo 
 
     if (!Directory.Exists(fileOutputDirectory))
     {
+        fileOutputDirectory ??= string.Empty;
         Utilities.WriteInformation("Creating output directory {0}.", fileOutputDirectory);
         Directory.CreateDirectory(fileOutputDirectory);
     }
@@ -116,7 +116,7 @@ static async Task<int> Convert(TargetType targetType, FileInfo source, FileInfo 
 
     foreach (var fileToProcess in filesToProcess)
     {
-        var targetFile = fileOutputDirectory == target.FullName || isSourceDirectory
+        var targetFile = isSourceDirectory
             ? new FileInfo(Path.Combine(fileOutputDirectory, Path.GetFileNameWithoutExtension(fileToProcess.FullName) + defaultExtension))
             : target;
 
