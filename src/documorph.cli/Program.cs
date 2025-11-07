@@ -79,10 +79,9 @@ static async Task<int> Convert(TargetType targetType, FileInfo source, FileInfo 
         return 1;
     }
 
-    var fileOutputDirectory = Path.GetDirectoryName(target.FullName)
-            ?? "";
+    var fileOutputDirectory = !isSourceDirectory ? Path.GetDirectoryName(target.FullName) : target.FullName;
 
-    if (isSourceDirectory && fileOutputDirectory != target.FullName.TrimEnd('/').TrimEnd('\\'))
+    if (isSourceDirectory && File.Exists(fileOutputDirectory))
     {
         Utilities.WriteError("When source is a directory, target must also be a directory.");
         return 1;
