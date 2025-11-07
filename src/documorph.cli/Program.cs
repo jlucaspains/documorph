@@ -93,6 +93,7 @@ static async Task<int> Convert(TargetType targetType, FileInfo source, FileInfo 
 
     if (!Directory.Exists(fileOutputDirectory))
     {
+        fileOutputDirectory ??= string.Empty;
         Utilities.WriteInformation("Creating output directory {0}.", fileOutputDirectory);
         Directory.CreateDirectory(fileOutputDirectory);
     }
@@ -115,7 +116,7 @@ static async Task<int> Convert(TargetType targetType, FileInfo source, FileInfo 
 
     foreach (var fileToProcess in filesToProcess)
     {
-        var targetFile = fileOutputDirectory == target.FullName || isSourceDirectory
+        var targetFile = isSourceDirectory
             ? new FileInfo(Path.Combine(fileOutputDirectory, Path.GetFileNameWithoutExtension(fileToProcess.FullName) + defaultExtension))
             : target;
 
