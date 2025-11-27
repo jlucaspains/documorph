@@ -1,3 +1,5 @@
+using DocumentFormat.OpenXml.Bibliography;
+
 var rootCommand = new RootCommand();
 var markdownCommand = new Command("md", "Converts a .docx file to markdown.");
 var asciidocCommand = new Command("asciidoc", "Converts a .docx file to asciidoc.");
@@ -5,70 +7,99 @@ var wikiCommand = new Command("wiki", "Converts a .docx file to wikimedia format
 
 // Add option for source file or directory
 var sourceFileOption = new Option<FileInfo>(
-            name: "--in",
-            description: "The .docx file or directory to convert.")
-{ IsRequired = true };
+            name: "--in")
+{  Required = true, Description = "The .docx file or directory to convert." };
 
 // Add option for target file or directory
 var targetFileOption = new Option<FileInfo>(
-            name: "--out",
-            description: "The output file or directory name.")
-{ IsRequired = true };
+            name: "--out")
+{ Required = true, Description = "The output file or directory name." };
 
 // Add option for unique media name option
 var mediaLocationOption = new Option<DirectoryInfo>(
-            name: "--media-location",
-            description: "Media output directory.")
-{ IsRequired = false };
+            name: "--media-location")
+{ Required = false, Description = "Media output directory." };
 
-rootCommand.AddCommand(markdownCommand);
-rootCommand.AddCommand(asciidocCommand);
-rootCommand.AddCommand(wikiCommand);
+rootCommand.Add(markdownCommand);
+rootCommand.Add(asciidocCommand);
+rootCommand.Add(wikiCommand);
 
-markdownCommand.AddOption(sourceFileOption);
-markdownCommand.AddOption(targetFileOption);
-markdownCommand.AddOption(mediaLocationOption);
+markdownCommand.Options.Add(sourceFileOption);
+markdownCommand.Options.Add(targetFileOption);
+markdownCommand.Options.Add(mediaLocationOption);
 
-asciidocCommand.AddOption(sourceFileOption);
-asciidocCommand.AddOption(targetFileOption);
-asciidocCommand.AddOption(mediaLocationOption);
+asciidocCommand.Options.Add(sourceFileOption);
+asciidocCommand.Options.Add(targetFileOption);
+asciidocCommand.Options.Add(mediaLocationOption);
 
-wikiCommand.AddOption(sourceFileOption);
-wikiCommand.AddOption(targetFileOption);
-wikiCommand.AddOption(mediaLocationOption);
+wikiCommand.Options.Add(sourceFileOption);
+wikiCommand.Options.Add(targetFileOption);
+wikiCommand.Options.Add(mediaLocationOption);
 
-markdownCommand.SetHandler(ConvertMarkdown,
-    sourceFileOption, targetFileOption, mediaLocationOption);
+markdownCommand.SetAction(async parseResult => 
+{
+    var sourceFile = parseResult.GetValue(sourceFileOption);
+    var targetFile = parseResult.GetValue(targetFileOption);
+    var mediaLocation = parseResult.GetValue(mediaLocationOption);
 
-asciidocCommand.SetHandler(ConvertAsciiDoc,
-    sourceFileOption, targetFileOption, mediaLocationOption);
+    return await ConvertMarkdown(sourceFile, targetFile, mediaLocation);
+});
 
-wikiCommand.SetHandler(ConvertWiki,
-    sourceFileOption, targetFileOption, mediaLocationOption);
+asciidocCommand.SetAction(async parseResult => 
+{
+    var sourceFile = parseResult.GetValue(sourceFileOption);
+    var targetFile = parseResult.GetValue(targetFileOption);
+    var mediaLocation = parseResult.GetValue(mediaLocationOption);
 
-return await rootCommand.InvokeAsync(args);
+    return await ConvertAsciiDoc(sourceFile, targetFile, mediaLocation);
+});
 
-static async Task<int> ConvertMarkdown(FileInfo source, FileInfo target,
+wikiCommand.SetAction(async parseResult => 
+{
+    var sourceFile = parseResult.GetValue(sourceFileOption);
+    var targetFile = parseResult.GetValue(targetFileOption);
+    var mediaLocation = parseResult.GetValue(mediaLocationOption);
+
+    return await ConvertWiki(sourceFile, targetFile, mediaLocation);
+});
+
+ParseResult parseResult = rootCommand.Parse(args);
+
+return await parseResult.InvokeAsync();
+
+static async Task<int> ConvertMarkdown(FileInfo? source, FileInfo? target,
     DirectoryInfo? mediaLocation)
 {
     return await Convert(TargetType.Markdown, source, target, mediaLocation);
 }
 
-static async Task<int> ConvertAsciiDoc(FileInfo source, FileInfo target,
+static async Task<int> ConvertAsciiDoc(FileInfo? source, FileInfo? target,
     DirectoryInfo? mediaLocation)
 {
     return await Convert(TargetType.AsciiDoc, source, target, mediaLocation);
 }
 
-static async Task<int> ConvertWiki(FileInfo source, FileInfo target,
+static async Task<int> ConvertWiki(FileInfo? source, FileInfo? target,
     DirectoryInfo? mediaLocation)
 {
     return await Convert(TargetType.Wiki, source, target, mediaLocation);
 }
 
-static async Task<int> Convert(TargetType targetType, FileInfo source, FileInfo target,
+static async Task<int> Convert(TargetType targetType, FileInfo? source, FileInfo? target,
     DirectoryInfo? mediaLocation)
 {
+    if (source == null)
+    {
+        Utilities.WriteError("The --source option is required.");
+        return 1;
+    }
+
+    if (target == null)
+    {
+        Utilities.WriteError("The --target option is required.");
+        return 1;
+    }
+
     Utilities.WriteInformation("Converting {0} to {1}", source.FullName, target.FullName);
 
     var isSourceDirectory = (source.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
